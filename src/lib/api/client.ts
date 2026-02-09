@@ -26,6 +26,7 @@ import type {
   UpdateVariantPayload,
 } from "@/lib/types";
 import { endpoints, BASE_URL, API_KEY } from "./endpoints";
+import { convertHeicFiles } from "../imageConversion";
 import * as mock from "./mockServer";
 
 const USE_LIVE_API = Boolean(BASE_URL);
@@ -499,8 +500,9 @@ export async function uploadVariantImages(
   token: string,
 ): Promise<ApiResult<unknown>> {
   try {
+    const converted = await convertHeicFiles(files);
     const form = new FormData();
-    for (const file of files) {
+    for (const file of converted) {
       form.append("images", file);
     }
 
