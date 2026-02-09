@@ -24,4 +24,14 @@ export const endpoints = {
   /** GET /api/miniatures/:productCode — single variant by product code */
   miniature: (productCode: string) =>
     `${BASE_URL}/api/miniatures/${encodeURIComponent(productCode)}`,
+
+  /** POST /api/users/login — admin sign-in */
+  login: () => `${BASE_URL}/api/users/login`,
+
+  /** POST /api/users/admin — create admin account */
+  createAdmin: () => `${BASE_URL}/api/users/admin`,
+
+  /** POST /api/miniatures/:productCode/images — upload images for a variant */
+  variantImages: (productCode: string) =>
+    `${BASE_URL}/api/miniatures/${encodeURIComponent(productCode)}/images`,
 } as const;

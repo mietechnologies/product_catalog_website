@@ -108,6 +108,38 @@ export interface CatalogFilters {
   sort?: SortOption;
 }
 
+// ── Admin payload types ──────────────────────────────────────────────
+
+export interface CreateMiniatureVariant {
+  name: string;
+  description?: string;
+  size: string;
+  fileName: string;
+  price?: {
+    cost?: number;
+    wholesale?: number;
+    msrp?: number;
+  };
+}
+
+export interface UpdateVariantPayload {
+  name?: string;
+  description?: string;
+  size?: string;
+  price?: {
+    cost?: number;
+    wholesale?: number;
+    msrp?: number;
+  };
+}
+
+export interface CreateMiniaturePayload {
+  baseName: string;
+  description?: string;
+  category: string;
+  variants: CreateMiniatureVariant[];
+}
+
 /** API response wrappers */
 export interface ApiResponse<T> {
   data: T;

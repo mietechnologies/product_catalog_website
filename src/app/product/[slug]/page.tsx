@@ -1,32 +1,36 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, notFound } from "next/navigation";
 import Breadcrumbs from "@/components/product/Breadcrumbs";
 import Gallery from "@/components/product/Gallery";
 import PriceBlock from "@/components/product/PriceBlock";
 import Badge from "@/components/ui/Badge";
+import Button from "@/components/ui/Button";
 import Skeleton from "@/components/ui/Skeleton";
 import { useToast } from "@/components/ui/Toast";
+import { useAuth } from "@/lib/auth/AuthContext";
 import { fetchProduct } from "@/lib/api/client";
+import ImageUpload from "@/components/admin/ImageUpload";
+import EditVariantModal from "@/components/admin/EditVariantModal";
 import type { BreadcrumbItem } from "@/components/product/Breadcrumbs";
 import type { Product } from "@/lib/types";
 
 export default function ProductPage() {
   const params = useParams<{ slug: string }>();
   const { toast } = useToast();
+  const { auth } = useAuth();
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [is404, setIs404] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
+  const loadProduct = useCallback(() => {
     setIsLoading(true);
     setError(null);
 
     fetchProduct(params.slug).then((result) => {
-      if (cancelled) return;
       if (result.ok) {
         setProduct(result.data);
       } else if (result.status === 404) {
@@ -37,11 +41,11 @@ export default function ProductPage() {
       }
       setIsLoading(false);
     });
-
-    return () => {
-      cancelled = true;
-    };
   }, [params.slug, toast]);
+
+  useEffect(() => {
+    loadProduct();
+  }, [loadProduct]);
 
   if (is404) {
     notFound();
@@ -96,6 +100,12 @@ export default function ProductPage() {
   }
   crumbs.push({ label: product.name });
 
+  // Extract price numbers from attributes for the edit modal
+  const costStr = product.attributes["Print Cost"];
+  const wholesaleStr = product.attributes["Wholesale"];
+  const costNum = costStr ? parseFloat(costStr.replace("$", "")) : 0;
+  const wholesaleNum = wholesaleStr ? parseFloat(wholesaleStr.replace("$", "")) : 0;
+
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8 space-y-6">
       {/* Breadcrumbs */}
@@ -104,11 +114,18 @@ export default function ProductPage() {
       {/* Two-column product layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
         {/* Left: Gallery */}
-        <Gallery
-          images={product.images}
-          name={product.name}
-          creatureType={product.creatureType}
-        />
+        <div className="space-y-3">
+          <Gallery
+            images={product.images}
+            name={product.name}
+            creatureType={product.creatureType}
+          />
+
+          {/* Admin: Upload Photos */}
+          {auth && (
+            <ImageUpload productCode={product.productCode} onSuccess={loadProduct} />
+          )}
+        </div>
 
         {/* Right: Details */}
         <div className="space-y-6">
@@ -149,8 +166,48 @@ export default function ProductPage() {
 
           {/* Price + purchase placeholder */}
           <PriceBlock price={product.price} />
+
+          {/* Admin: Edit Details */}
+          {auth && (
+            <Button variant="ghost" onClick={() => setEditOpen(true)}>
+              <svg
+                className="h-4 w-4"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
+                />
+              </svg>
+              Edit Details
+            </Button>
+          )}
         </div>
       </div>
+
+      {/* Edit modal */}
+      {auth && (
+        <EditVariantModal
+          open={editOpen}
+          onClose={() => setEditOpen(false)}
+          productCode={product.productCode}
+          initial={{
+            name: product.name,
+            description: product.description,
+            size: product.size,
+            cost: costNum,
+            wholesale: wholesaleNum,
+            msrp: product.price,
+          }}
+          onSuccess={loadProduct}
+        />
+      )}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { notFound } from "next/navigation";
 import Breadcrumbs from "@/components/product/Breadcrumbs";
@@ -20,18 +20,19 @@ export default function ItemPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeVariantSlug, setActiveVariantSlug] = useState<string>("");
 
-  useEffect(() => {
-    let cancelled = false;
+  const loadItem = useCallback(() => {
     setIsLoading(true);
     setError(null);
 
     fetchItem(params.slug).then((result) => {
-      if (cancelled) return;
       if (result.ok) {
         setItem(result.data);
-        if (result.data.variants.length > 0) {
-          setActiveVariantSlug(result.data.variants[0].slug);
-        }
+        setActiveVariantSlug((prev) => {
+          // Keep current selection if it still exists, otherwise pick first
+          const stillExists = result.data.variants.some((v) => v.slug === prev);
+          if (stillExists) return prev;
+          return result.data.variants.length > 0 ? result.data.variants[0].slug : "";
+        });
       } else if (result.status === 404) {
         setIs404(true);
       } else {
@@ -40,11 +41,11 @@ export default function ItemPage() {
       }
       setIsLoading(false);
     });
-
-    return () => {
-      cancelled = true;
-    };
   }, [params.slug, toast]);
+
+  useEffect(() => {
+    loadItem();
+  }, [loadItem]);
 
   if (is404) {
     notFound();
@@ -122,7 +123,10 @@ export default function ItemPage() {
         {/* Right: detail panel */}
         <div>
           {activeVariant ? (
-            <VariantDetailPanel variant={activeVariant} />
+            <VariantDetailPanel
+              variant={activeVariant}
+              onDataChange={loadItem}
+            />
           ) : (
             <p className="text-sm text-neutral">Select a variant to view details.</p>
           )}

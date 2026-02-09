@@ -17,10 +17,12 @@ import type {
   CatalogEntry,
   CatalogFilters,
   CatalogResponse,
+  CreateMiniaturePayload,
   CreatureType,
   Product,
   ProductSize,
   SortOption,
+  UpdateVariantPayload,
 } from "@/lib/types";
 import { endpoints, BASE_URL, API_KEY } from "./endpoints";
 import * as mock from "./mockServer";
@@ -472,4 +474,71 @@ export async function fetchProduct(
     ok: true,
     data: backendToProduct(item, parentItemSlug),
   };
+}
+
+/** Create a new miniature with variants (admin only) */
+export async function createMiniature(
+  payload: CreateMiniaturePayload,
+  token: string,
+): Promise<ApiResult<unknown>> {
+  return fetchJson(endpoints.miniatures(), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+/** Upload images for a variant (admin only, multipart) */
+export async function uploadVariantImages(
+  productCode: string,
+  files: File[],
+  token: string,
+): Promise<ApiResult<unknown>> {
+  try {
+    const form = new FormData();
+    for (const file of files) {
+      form.append("images", file);
+    }
+
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${token}`,
+    };
+    if (API_KEY) {
+      headers["x-api-key"] = API_KEY;
+    }
+
+    const res = await fetch(endpoints.variantImages(productCode), {
+      method: "POST",
+      headers,
+      body: form,
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      return { ok: false, error: body?.message ?? res.statusText, status: res.status };
+    }
+    const data = await res.json();
+    return { ok: true, data };
+  } catch (err) {
+    return { ok: false, error: (err as Error).message, status: 0 };
+  }
+}
+
+/** Update variant fields (admin only) */
+export async function updateVariant(
+  productCode: string,
+  updates: UpdateVariantPayload,
+  token: string,
+): Promise<ApiResult<unknown>> {
+  return fetchJson(endpoints.miniature(productCode), {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(updates),
+  });
 }
