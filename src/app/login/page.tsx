@@ -1,0 +1,111 @@
+"use client";
+
+import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Card from "@/components/ui/Card";
+import Input from "@/components/ui/Input";
+import Button from "@/components/ui/Button";
+import { useToast } from "@/components/ui/Toast";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { loginAdmin } from "@/lib/auth/api";
+import { API_KEY } from "@/lib/api/endpoints";
+
+export default function LoginPage() {
+  const router = useRouter();
+  const { toast } = useToast();
+  const { signIn } = useAuth();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const canSubmit = email.trim() !== "" && password !== "";
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    if (!canSubmit) return;
+
+    setLoading(true);
+    const result = await loginAdmin(email, password);
+    setLoading(false);
+
+    if (!result.ok) {
+      toast(result.error, "error");
+      return;
+    }
+
+    const { token, data } = result.data;
+    signIn(data.user, token);
+    toast("Signed in successfully", "success");
+    router.push("/");
+  }
+
+  return (
+    <div className="mx-auto max-w-md px-4 py-16">
+      <Card className="p-6 sm:p-8">
+        <h1 className="text-2xl font-bold text-primary mb-6 text-center">
+          Admin Login
+        </h1>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-neutral-dark mb-1"
+            >
+              Email
+            </label>
+            <Input
+              id="email"
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="admin@example.com"
+              required
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-neutral-dark mb-1"
+            >
+              Password
+            </label>
+            <Input
+              id="password"
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+              required
+            />
+          </div>
+
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={!canSubmit || loading}
+          >
+            {loading ? "Signing in\u2026" : "Sign In"}
+          </Button>
+        </form>
+
+        {API_KEY && (
+          <p className="mt-6 text-center text-sm text-neutral">
+            Need an account?{" "}
+            <Link
+              href="/admin/create"
+              className="font-medium text-primary hover:text-primary-light transition-colors"
+            >
+              Create Admin
+            </Link>
+          </p>
+        )}
+      </Card>
+    </div>
+  );
+}

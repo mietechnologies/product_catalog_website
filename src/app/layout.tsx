@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Header from "@/components/layout/Header";
 import { ToastProvider } from "@/components/ui/Toast";
+import { AuthProvider } from "@/lib/auth/AuthContext";
 
 export const metadata: Metadata = {
   title: "MIETech — 3D-Printed Tabletop Miniatures",
@@ -18,13 +19,15 @@ export default function RootLayout({
     <html lang="en">
       <body className="min-h-screen flex flex-col antialiased">
         <ToastProvider>
-          <Header />
-          <main className="flex-1">{children}</main>
-          <footer className="border-t border-neutral/15 bg-white py-6">
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 text-center text-xs text-neutral">
-              MIETechnologies &mdash; Making It Easier
-            </div>
-          </footer>
+          <AuthProvider>
+            <Header />
+            <main className="flex-1">{children}</main>
+            <footer className="border-t border-neutral/15 bg-white py-6">
+              <div className="mx-auto max-w-7xl px-4 sm:px-6 text-center text-xs text-neutral">
+                MIETechnologies &mdash; Making It Easier
+              </div>
+            </footer>
+          </AuthProvider>
         </ToastProvider>
       </body>
     </html>
