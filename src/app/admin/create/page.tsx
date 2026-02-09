@@ -50,7 +50,6 @@ export default function CreateAdminPage() {
     setVerifying(false);
 
     if (valid) {
-      localStorage.setItem("mietech-api-key", apiKey.trim());
       setApiKeyVerified(true);
     } else {
       setApiKeyError("Invalid or inactive API key.");

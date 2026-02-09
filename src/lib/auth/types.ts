@@ -4,7 +4,10 @@ export interface AuthUser {
   email: string;
   firstName: string;
   lastName: string;
+  merchantName?: string;
   accountType: string;
+  accountStatus?: string;
+  approvedDate?: string;
   createdAt: string;
 }
 

@@ -16,6 +16,7 @@ interface AuthContextValue {
   ready: boolean;
   signIn: (user: AuthUser, token: string) => void;
   signOut: () => void;
+  updateUser: (user: AuthUser, token?: string) => void;
 }
 
 // ── Context ──────────────────────────────────────────────────────────
@@ -55,13 +56,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }, []);
 
+  const updateUser = useCallback((user: AuthUser, token?: string) => {
+    setAuth((prev) => {
+      if (!prev) return prev;
+      const state: AuthState = { user, token: token ?? prev.token };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      return state;
+    });
+  }, []);
+
   const signOut = useCallback(() => {
     setAuth(null);
     localStorage.removeItem(STORAGE_KEY);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ auth, ready, signIn, signOut }}>
+    <AuthContext.Provider value={{ auth, ready, signIn, signOut, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

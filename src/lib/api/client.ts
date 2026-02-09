@@ -25,7 +25,7 @@ import type {
   SortOption,
   UpdateVariantPayload,
 } from "@/lib/types";
-import { endpoints, BASE_URL, getApiKey } from "./endpoints";
+import { endpoints, BASE_URL } from "./endpoints";
 import { convertHeicFiles } from "../imageConversion";
 import * as mock from "./mockServer";
 
@@ -41,10 +41,6 @@ async function fetchJson<T>(
     const headers: Record<string, string> = {
       ...(init?.headers as Record<string, string>),
     };
-    const apiKey = getApiKey();
-    if (apiKey) {
-      headers["x-api-key"] = apiKey;
-    }
 
     const res = await fetch(url, { ...init, headers });
     if (!res.ok) {
@@ -510,10 +506,6 @@ export async function uploadVariantImages(
     const headers: Record<string, string> = {
       Authorization: `Bearer ${token}`,
     };
-    const apiKey = getApiKey();
-    if (apiKey) {
-      headers["x-api-key"] = apiKey;
-    }
 
     const res = await fetch(endpoints.variantImages(productCode), {
       method: "POST",

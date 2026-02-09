@@ -6,15 +6,6 @@
  */
 
 export const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
-export function getApiKey(): string {
-  const envKey = process.env.NEXT_PUBLIC_API_KEY ?? "";
-  if (envKey) return envKey;
-  try {
-    return localStorage.getItem("mietech-api-key") ?? "";
-  } catch {
-    return "";
-  }
-}
 
 export const endpoints = {
   /**
@@ -55,6 +46,15 @@ export const endpoints = {
   /** PATCH /api/users/retailers/:id/reject — reject a retailer */
   rejectRetailer: (id: string) =>
     `${BASE_URL}/api/users/retailers/${encodeURIComponent(id)}/reject`,
+
+  /** GET /api/users/me — get current user profile */
+  me: () => `${BASE_URL}/api/users/me`,
+
+  /** PATCH /api/users/me — update current user profile */
+  updateMe: () => `${BASE_URL}/api/users/me`,
+
+  /** PATCH /api/users/me/password — change password */
+  updatePassword: () => `${BASE_URL}/api/users/me/password`,
 
   /** POST /api/miniatures/:productCode/variants — add a new variant to a miniature */
   addVariant: (productCode: string) =>

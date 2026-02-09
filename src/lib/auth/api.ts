@@ -6,7 +6,7 @@
 
 import type { ApiResult } from "@/lib/types";
 import type { AuthResponse, AuthUser, PendingRetailer } from "./types";
-import { endpoints, getApiKey } from "@/lib/api/endpoints";
+import { endpoints } from "@/lib/api/endpoints";
 
 // ── Generic POST helper ──────────────────────────────────────────────
 
@@ -19,9 +19,8 @@ async function authFetch<T>(
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
-    const key = apiKeyOverride ?? getApiKey();
-    if (key) {
-      headers["x-api-key"] = key;
+    if (apiKeyOverride) {
+      headers["x-api-key"] = apiKeyOverride;
     }
 
     const res = await fetch(url, {
@@ -102,15 +101,9 @@ export async function fetchPendingRetailers(
   token: string,
 ): Promise<ApiResult<{ retailers: PendingRetailer[] }>> {
   try {
-    const headers: Record<string, string> = {
-      Authorization: `Bearer ${token}`,
-    };
-    const apiKey = getApiKey();
-    if (apiKey) {
-      headers["x-api-key"] = apiKey;
-    }
-
-    const res = await fetch(endpoints.pendingRetailers(), { headers });
+    const res = await fetch(endpoints.pendingRetailers(), {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
     if (!res.ok) {
       const body = await res.json().catch(() => null);
@@ -133,15 +126,10 @@ async function patchRetailer(
   token: string,
 ): Promise<ApiResult<unknown>> {
   try {
-    const headers: Record<string, string> = {
-      Authorization: `Bearer ${token}`,
-    };
-    const apiKey = getApiKey();
-    if (apiKey) {
-      headers["x-api-key"] = apiKey;
-    }
-
-    const res = await fetch(url, { method: "PATCH", headers });
+    const res = await fetch(url, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
     if (!res.ok) {
       const body = await res.json().catch(() => null);
@@ -165,6 +153,79 @@ export function approveRetailer(id: string, token: string) {
 
 export function rejectRetailer(id: string, token: string) {
   return patchRetailer(endpoints.rejectRetailer(id), token);
+}
+
+// ── User profile ────────────────────────────────────────────────────
+
+function authedHeaders(token: string): Record<string, string> {
+  return { Authorization: `Bearer ${token}` };
+}
+
+export async function fetchMe(
+  token: string,
+): Promise<ApiResult<{ user: AuthUser }>> {
+  try {
+    const res = await fetch(endpoints.me(), {
+      headers: authedHeaders(token),
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      return { ok: false, error: body?.message ?? res.statusText, status: res.status };
+    }
+
+    const json = await res.json();
+    return { ok: true, data: { user: json.data.user } };
+  } catch (err) {
+    return { ok: false, error: (err as Error).message, status: 0 };
+  }
+}
+
+export async function updateMe(
+  token: string,
+  fields: { firstName?: string; lastName?: string; email?: string; merchantName?: string },
+): Promise<ApiResult<{ user: AuthUser }>> {
+  try {
+    const res = await fetch(endpoints.updateMe(), {
+      method: "PATCH",
+      headers: { ...authedHeaders(token), "Content-Type": "application/json" },
+      body: JSON.stringify(fields),
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      return { ok: false, error: body?.message ?? res.statusText, status: res.status };
+    }
+
+    const json = await res.json();
+    return { ok: true, data: { user: json.data.user } };
+  } catch (err) {
+    return { ok: false, error: (err as Error).message, status: 0 };
+  }
+}
+
+export async function updatePassword(
+  token: string,
+  currentPassword: string,
+  newPassword: string,
+): Promise<ApiResult<{ token: string; user: AuthUser }>> {
+  try {
+    const res = await fetch(endpoints.updatePassword(), {
+      method: "PATCH",
+      headers: { ...authedHeaders(token), "Content-Type": "application/json" },
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      return { ok: false, error: body?.message ?? res.statusText, status: res.status };
+    }
+
+    const json = await res.json();
+    return { ok: true, data: { token: json.token, user: json.data.user } };
+  } catch (err) {
+    return { ok: false, error: (err as Error).message, status: 0 };
+  }
 }
 
 export function createAdmin(

@@ -85,9 +85,12 @@ export default function Header() {
               {ready && auth && (
                 <>
                   <li>
-                    <span className="px-3 py-2 text-sm font-medium text-primary">
-                      {auth.user.firstName}
-                    </span>
+                    <Link
+                      href="/profile"
+                      className="px-3 py-2 text-sm font-medium text-primary hover:text-primary-light transition-colors"
+                    >
+                      {auth.user.merchantName || auth.user.firstName}
+                    </Link>
                   </li>
                   <li>
                     <button
