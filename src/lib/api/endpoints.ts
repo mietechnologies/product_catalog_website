@@ -6,7 +6,15 @@
  */
 
 export const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
-export const API_KEY = process.env.NEXT_PUBLIC_API_KEY ?? "";
+export function getApiKey(): string {
+  const envKey = process.env.NEXT_PUBLIC_API_KEY ?? "";
+  if (envKey) return envKey;
+  try {
+    return localStorage.getItem("mietech-api-key") ?? "";
+  } catch {
+    return "";
+  }
+}
 
 export const endpoints = {
   /**
@@ -24,6 +32,9 @@ export const endpoints = {
   /** GET /api/miniatures/:productCode — single variant by product code */
   miniature: (productCode: string) =>
     `${BASE_URL}/api/miniatures/${encodeURIComponent(productCode)}`,
+
+  /** POST /api/keys/validate — validate an API key */
+  validateApiKey: () => `${BASE_URL}/api/keys/validate`,
 
   /** POST /api/users/login — admin sign-in */
   login: () => `${BASE_URL}/api/users/login`,

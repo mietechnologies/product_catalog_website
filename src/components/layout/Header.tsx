@@ -14,7 +14,7 @@ export default function Header() {
 
   function handleSignOut() {
     signOut();
-    router.push("/login");
+    router.push("/");
   }
 
   return (

@@ -6,20 +6,22 @@
 
 import type { ApiResult } from "@/lib/types";
 import type { AuthResponse } from "./types";
-import { endpoints, API_KEY } from "@/lib/api/endpoints";
+import { endpoints, getApiKey } from "@/lib/api/endpoints";
 
 // ── Generic POST helper ──────────────────────────────────────────────
 
 async function authFetch<T>(
   url: string,
   body: Record<string, string>,
+  apiKeyOverride?: string,
 ): Promise<ApiResult<T>> {
   try {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
-    if (API_KEY) {
-      headers["x-api-key"] = API_KEY;
+    const key = apiKeyOverride ?? getApiKey();
+    if (key) {
+      headers["x-api-key"] = key;
     }
 
     const res = await fetch(url, {
@@ -46,15 +48,32 @@ async function authFetch<T>(
 
 // ── Public API ───────────────────────────────────────────────────────
 
+export async function validateApiKey(apiKey: string): Promise<boolean> {
+  try {
+    const res = await fetch(endpoints.validateApiKey(), {
+      method: "POST",
+      headers: { "x-api-key": apiKey },
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    return data.valid === true;
+  } catch {
+    return false;
+  }
+}
+
 export function loginAdmin(email: string, password: string) {
   return authFetch<AuthResponse>(endpoints.login(), { email, password });
 }
 
-export function createAdmin(fields: {
-  email: string;
-  firstName: string;
-  lastName: string;
-  password: string;
-}) {
-  return authFetch<AuthResponse>(endpoints.createAdmin(), fields);
+export function createAdmin(
+  fields: {
+    email: string;
+    firstName: string;
+    lastName: string;
+    password: string;
+  },
+  apiKey?: string,
+) {
+  return authFetch<AuthResponse>(endpoints.createAdmin(), fields, apiKey);
 }

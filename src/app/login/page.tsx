@@ -9,7 +9,6 @@ import Button from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { loginAdmin } from "@/lib/auth/api";
-import { API_KEY } from "@/lib/api/endpoints";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -94,17 +93,15 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        {API_KEY && (
-          <p className="mt-6 text-center text-sm text-neutral">
-            Need an account?{" "}
-            <Link
-              href="/admin/create"
-              className="font-medium text-primary hover:text-primary-light transition-colors"
-            >
-              Create Admin
-            </Link>
-          </p>
-        )}
+        <p className="mt-6 text-center text-sm text-neutral">
+          Need an account?{" "}
+          <Link
+            href="/admin/create"
+            className="font-medium text-primary hover:text-primary-light transition-colors"
+          >
+            Create Admin
+          </Link>
+        </p>
       </Card>
     </div>
   );
