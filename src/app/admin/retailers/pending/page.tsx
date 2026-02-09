@@ -82,7 +82,7 @@ export default function PendingRetailersPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
+    <div className="mx-auto max-w-5xl px-4 py-10">
       <h1 className="text-2xl font-bold text-primary mb-6">
         Pending Retailers
       </h1>
@@ -94,39 +94,46 @@ export default function PendingRetailersPage() {
           <p className="text-neutral">No pending retailer applications.</p>
         </Card>
       ) : (
-        <div className="space-y-4">
-          {retailers.map((r) => (
-            <Card key={r.id || r.email} className="p-5">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="min-w-0">
-                  <p className="text-lg font-semibold text-primary-dark truncate">
-                    {r.merchantName}
-                  </p>
-                  <p className="text-sm text-neutral-dark">
-                    {r.firstName} {r.lastName}
-                  </p>
-                  <p className="text-sm text-neutral truncate">{r.email}</p>
-                </div>
-
-                <div className="flex gap-2 shrink-0">
-                  <Button
-                    onClick={() => handleApprove(r.id)}
-                    disabled={actioningId === r.id}
-                  >
-                    {actioningId === r.id ? "..." : "Approve"}
-                  </Button>
-                  <button
-                    onClick={() => handleReject(r.id)}
-                    disabled={actioningId === r.id}
-                    className="rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
-                  >
-                    {actioningId === r.id ? "..." : "Reject"}
-                  </button>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
+        <Card className="overflow-x-auto">
+          <table className="w-full text-sm text-left">
+            <thead>
+              <tr className="border-b border-neutral/15">
+                <th className="px-4 py-3 text-xs font-medium text-neutral uppercase tracking-wide">Merchant Name</th>
+                <th className="px-4 py-3 text-xs font-medium text-neutral uppercase tracking-wide">First Name</th>
+                <th className="px-4 py-3 text-xs font-medium text-neutral uppercase tracking-wide">Last Name</th>
+                <th className="px-4 py-3 text-xs font-medium text-neutral uppercase tracking-wide">Email</th>
+                <th className="px-4 py-3 text-xs font-medium text-neutral uppercase tracking-wide text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {retailers.map((r) => (
+                <tr key={r.id || r.email} className="border-b border-neutral/10 last:border-0">
+                  <td className="px-4 py-3 font-medium text-primary-dark whitespace-nowrap">{r.merchantName}</td>
+                  <td className="px-4 py-3 text-neutral-dark whitespace-nowrap">{r.firstName}</td>
+                  <td className="px-4 py-3 text-neutral-dark whitespace-nowrap">{r.lastName}</td>
+                  <td className="px-4 py-3 text-neutral">{r.email}</td>
+                  <td className="px-4 py-3 text-right whitespace-nowrap">
+                    <div className="flex gap-2 justify-end">
+                      <Button
+                        onClick={() => handleApprove(r.id)}
+                        disabled={actioningId === r.id}
+                      >
+                        {actioningId === r.id ? "..." : "Approve"}
+                      </Button>
+                      <button
+                        onClick={() => handleReject(r.id)}
+                        disabled={actioningId === r.id}
+                        className="rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                      >
+                        {actioningId === r.id ? "..." : "Reject"}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Card>
       )}
     </div>
   );

@@ -117,6 +117,13 @@ export default function SlideMenu({ open, onClose }: SlideMenuProps) {
                   >
                     Pending Retailers
                   </Link>
+                  <Link
+                    href="/admin/retailers/approved"
+                    onClick={onClose}
+                    className={linkClass}
+                  >
+                    Approved Retailers
+                  </Link>
                 </div>
               )}
             </>

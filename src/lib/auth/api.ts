@@ -97,6 +97,30 @@ export async function createRetailer(fields: {
 
 // ── Retailer management (admin) ─────────────────────────────────────
 
+export async function fetchApprovedRetailers(
+  token: string,
+): Promise<ApiResult<{ retailers: PendingRetailer[] }>> {
+  try {
+    const res = await fetch(endpoints.approvedRetailers(), {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      return {
+        ok: false,
+        error: body?.message ?? res.statusText,
+        status: res.status,
+      };
+    }
+
+    const json = await res.json();
+    return { ok: true, data: { retailers: json.data.retailers } };
+  } catch (err) {
+    return { ok: false, error: (err as Error).message, status: 0 };
+  }
+}
+
 export async function fetchPendingRetailers(
   token: string,
 ): Promise<ApiResult<{ retailers: PendingRetailer[] }>> {

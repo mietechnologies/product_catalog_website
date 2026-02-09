@@ -39,6 +39,9 @@ export const endpoints = {
   /** GET /api/users/retailers/pending — list pending retailer accounts */
   pendingRetailers: () => `${BASE_URL}/api/users/retailers/pending`,
 
+  /** GET /api/users/retailers/approved — list approved retailer accounts */
+  approvedRetailers: () => `${BASE_URL}/api/users/retailers/approved`,
+
   /** PATCH /api/users/retailers/:id/approve — approve a retailer */
   approveRetailer: (id: string) =>
     `${BASE_URL}/api/users/retailers/${encodeURIComponent(id)}/approve`,
