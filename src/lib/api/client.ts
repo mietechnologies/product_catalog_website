@@ -10,6 +10,7 @@
  */
 
 import type {
+  AddVariantPayload,
   ApiResult,
   BackendCatalogResponse,
   BackendMiniatureItem,
@@ -525,6 +526,22 @@ export async function uploadVariantImages(
   } catch (err) {
     return { ok: false, error: (err as Error).message, status: 0 };
   }
+}
+
+/** Add a new variant to an existing miniature (admin only) */
+export async function addVariant(
+  productCode: string,
+  payload: AddVariantPayload,
+  token: string,
+): Promise<ApiResult<unknown>> {
+  return fetchJson(endpoints.addVariant(productCode), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
 }
 
 /** Update variant fields (admin only) */

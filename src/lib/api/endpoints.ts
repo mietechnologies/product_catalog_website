@@ -31,6 +31,10 @@ export const endpoints = {
   /** POST /api/users/admin — create admin account */
   createAdmin: () => `${BASE_URL}/api/users/admin`,
 
+  /** POST /api/miniatures/:productCode/variants — add a new variant to a miniature */
+  addVariant: (productCode: string) =>
+    `${BASE_URL}/api/miniatures/${encodeURIComponent(productCode)}/variants`,
+
   /** POST /api/miniatures/:productCode/images — upload images for a variant */
   variantImages: (productCode: string) =>
     `${BASE_URL}/api/miniatures/${encodeURIComponent(productCode)}/images`,

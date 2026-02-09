@@ -6,19 +6,24 @@ import { notFound } from "next/navigation";
 import Breadcrumbs from "@/components/product/Breadcrumbs";
 import VariantList from "@/components/item/VariantList";
 import VariantDetailPanel from "@/components/item/VariantDetailPanel";
+import Button from "@/components/ui/Button";
 import Skeleton from "@/components/ui/Skeleton";
 import { useToast } from "@/components/ui/Toast";
+import { useAuth } from "@/lib/auth/AuthContext";
 import { fetchItem } from "@/lib/api/client";
+import AddVariantModal from "@/components/admin/AddVariantModal";
 import type { BaseItem } from "@/lib/types";
 
 export default function ItemPage() {
   const params = useParams<{ slug: string }>();
   const { toast } = useToast();
+  const { auth } = useAuth();
   const [item, setItem] = useState<BaseItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [is404, setIs404] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeVariantSlug, setActiveVariantSlug] = useState<string>("");
+  const [addOpen, setAddOpen] = useState(false);
 
   const loadItem = useCallback(() => {
     setIsLoading(true);
@@ -118,6 +123,32 @@ export default function ItemPage() {
             activeSlug={activeVariantSlug}
             onSelect={setActiveVariantSlug}
           />
+
+          {/* Admin: Add Variant */}
+          {auth && (
+            <Button
+              variant="ghost"
+              className="w-full mt-3"
+              onClick={() => setAddOpen(true)}
+            >
+              <svg
+                className="h-4 w-4"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 4.5v15m7.5-7.5h-15"
+                />
+              </svg>
+              Add Variant
+            </Button>
+          )}
         </div>
 
         {/* Right: detail panel */}
@@ -132,6 +163,15 @@ export default function ItemPage() {
           )}
         </div>
       </div>
+      {/* Add variant modal */}
+      {auth && item.variants.length > 0 && (
+        <AddVariantModal
+          open={addOpen}
+          onClose={() => setAddOpen(false)}
+          productCode={item.variants[0].productCode}
+          onSuccess={loadItem}
+        />
+      )}
     </div>
   );
 }

@@ -133,6 +133,18 @@ export interface UpdateVariantPayload {
   };
 }
 
+export interface AddVariantPayload {
+  name: string;
+  size: string;
+  fileName: string;
+  description?: string;
+  price?: {
+    cost?: number;
+    wholesale?: number;
+    msrp?: number;
+  };
+}
+
 export interface CreateMiniaturePayload {
   baseName: string;
   description?: string;
