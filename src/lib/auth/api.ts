@@ -5,7 +5,7 @@
  */
 
 import type { ApiResult } from "@/lib/types";
-import type { AuthResponse } from "./types";
+import type { AuthResponse, AuthUser, PendingRetailer } from "./types";
 import { endpoints, getApiKey } from "@/lib/api/endpoints";
 
 // ── Generic POST helper ──────────────────────────────────────────────
@@ -64,6 +64,107 @@ export async function validateApiKey(apiKey: string): Promise<boolean> {
 
 export function loginAdmin(email: string, password: string) {
   return authFetch<AuthResponse>(endpoints.login(), { email, password });
+}
+
+export async function createRetailer(fields: {
+  email: string;
+  firstName: string;
+  lastName: string;
+  merchantName: string;
+  password: string;
+}): Promise<ApiResult<{ status: string; data: { user: AuthUser } }>> {
+  try {
+    const res = await fetch(endpoints.createRetailer(), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(fields),
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      return {
+        ok: false,
+        error: data?.message ?? res.statusText,
+        status: res.status,
+      };
+    }
+
+    const data = await res.json();
+    return { ok: true, data };
+  } catch (err) {
+    return { ok: false, error: (err as Error).message, status: 0 };
+  }
+}
+
+// ── Retailer management (admin) ─────────────────────────────────────
+
+export async function fetchPendingRetailers(
+  token: string,
+): Promise<ApiResult<{ retailers: PendingRetailer[] }>> {
+  try {
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${token}`,
+    };
+    const apiKey = getApiKey();
+    if (apiKey) {
+      headers["x-api-key"] = apiKey;
+    }
+
+    const res = await fetch(endpoints.pendingRetailers(), { headers });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      return {
+        ok: false,
+        error: body?.message ?? res.statusText,
+        status: res.status,
+      };
+    }
+
+    const json = await res.json();
+    return { ok: true, data: { retailers: json.data.retailers } };
+  } catch (err) {
+    return { ok: false, error: (err as Error).message, status: 0 };
+  }
+}
+
+async function patchRetailer(
+  url: string,
+  token: string,
+): Promise<ApiResult<unknown>> {
+  try {
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${token}`,
+    };
+    const apiKey = getApiKey();
+    if (apiKey) {
+      headers["x-api-key"] = apiKey;
+    }
+
+    const res = await fetch(url, { method: "PATCH", headers });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      return {
+        ok: false,
+        error: body?.message ?? res.statusText,
+        status: res.status,
+      };
+    }
+
+    const data = await res.json();
+    return { ok: true, data };
+  } catch (err) {
+    return { ok: false, error: (err as Error).message, status: 0 };
+  }
+}
+
+export function approveRetailer(id: string, token: string) {
+  return patchRetailer(endpoints.approveRetailer(id), token);
+}
+
+export function rejectRetailer(id: string, token: string) {
+  return patchRetailer(endpoints.rejectRetailer(id), token);
 }
 
 export function createAdmin(

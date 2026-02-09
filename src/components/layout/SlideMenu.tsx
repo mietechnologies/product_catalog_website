@@ -73,14 +73,23 @@ export default function SlideMenu({ open, onClose }: SlideMenuProps) {
             Browse Catalog
           </Link>
 
-          {auth && (
-            <Link
-              href="/admin/miniatures/add"
-              onClick={onClose}
-              className={linkClass}
-            >
-              Add Miniature
-            </Link>
+          {auth && auth.user.accountType === "admin" && (
+            <>
+              <Link
+                href="/admin/miniatures/add"
+                onClick={onClose}
+                className={linkClass}
+              >
+                Add Miniature
+              </Link>
+              <Link
+                href="/admin/retailers/pending"
+                onClick={onClose}
+                className={linkClass}
+              >
+                Pending Retailers
+              </Link>
+            </>
           )}
         </nav>
       </div>

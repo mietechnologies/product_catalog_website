@@ -42,6 +42,20 @@ export const endpoints = {
   /** POST /api/users/admin — create admin account */
   createAdmin: () => `${BASE_URL}/api/users/admin`,
 
+  /** POST /api/users/retailer — create retailer account (pending approval) */
+  createRetailer: () => `${BASE_URL}/api/users/retailer`,
+
+  /** GET /api/users/retailers/pending — list pending retailer accounts */
+  pendingRetailers: () => `${BASE_URL}/api/users/retailers/pending`,
+
+  /** PATCH /api/users/retailers/:id/approve — approve a retailer */
+  approveRetailer: (id: string) =>
+    `${BASE_URL}/api/users/retailers/${encodeURIComponent(id)}/approve`,
+
+  /** PATCH /api/users/retailers/:id/reject — reject a retailer */
+  rejectRetailer: (id: string) =>
+    `${BASE_URL}/api/users/retailers/${encodeURIComponent(id)}/reject`,
+
   /** POST /api/miniatures/:productCode/variants — add a new variant to a miniature */
   addVariant: (productCode: string) =>
     `${BASE_URL}/api/miniatures/${encodeURIComponent(productCode)}/variants`,

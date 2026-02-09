@@ -15,6 +15,18 @@ export interface AuthResponse {
   data: { user: AuthUser };
 }
 
+/** A retailer account returned by the pending-retailers endpoint */
+export interface PendingRetailer {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  merchantName: string;
+  accountType: string;
+  accountStatus: string;
+  createdAt: string;
+}
+
 /** Persisted auth state (localStorage + context) */
 export interface AuthState {
   user: AuthUser;

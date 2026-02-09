@@ -77,7 +77,7 @@ export default function Header() {
                     href="/login"
                     className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-primary/5 hover:text-primary transition-colors"
                   >
-                    Admin Login
+                    Login
                   </Link>
                 </li>
               )}

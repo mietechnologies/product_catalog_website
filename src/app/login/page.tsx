@@ -44,7 +44,7 @@ export default function LoginPage() {
     <div className="mx-auto max-w-md px-4 py-16">
       <Card className="p-6 sm:p-8">
         <h1 className="text-2xl font-bold text-primary mb-6 text-center">
-          Admin Login
+          Login
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -93,15 +93,26 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-neutral">
-          Need an account?{" "}
-          <Link
-            href="/admin/create"
-            className="font-medium text-primary hover:text-primary-light transition-colors"
-          >
-            Create Admin
-          </Link>
-        </p>
+        <div className="mt-6 text-center text-sm text-neutral space-y-2">
+          <p>
+            Retailer?{" "}
+            <Link
+              href="/retailer/create"
+              className="font-medium text-primary hover:text-primary-light transition-colors"
+            >
+              Register here
+            </Link>
+          </p>
+          <p>
+            Admin?{" "}
+            <Link
+              href="/admin/create"
+              className="font-medium text-primary hover:text-primary-light transition-colors"
+            >
+              Create Admin
+            </Link>
+          </p>
+        </div>
       </Card>
     </div>
   );
