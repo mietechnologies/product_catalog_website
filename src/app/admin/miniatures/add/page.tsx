@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
@@ -8,7 +8,7 @@ import Select from "@/components/ui/Select";
 import Button from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { createMiniature } from "@/lib/api/client";
+import { createMiniature, uploadVariantImages } from "@/lib/api/client";
 import {
   CREATURE_TYPES,
   PRODUCT_SIZES,
@@ -23,6 +23,7 @@ interface VariantForm {
   cost: string;
   wholesale: string;
   msrp: string;
+  files: File[];
 }
 
 function emptyVariant(): VariantForm {
@@ -34,6 +35,7 @@ function emptyVariant(): VariantForm {
     cost: "",
     wholesale: "",
     msrp: "",
+    files: [],
   };
 }
 
@@ -50,6 +52,8 @@ export default function AddMiniaturePage() {
   const [category, setCategory] = useState("");
   const [variants, setVariants] = useState<VariantForm[]>([emptyVariant()]);
   const [loading, setLoading] = useState(false);
+  const [loadingText, setLoadingText] = useState("Creating…");
+  const fileInputRefs = useRef<Map<number, HTMLInputElement>>(new Map());
 
   // Auth guard
   if (ready && !auth) {
@@ -96,6 +100,7 @@ export default function AddMiniaturePage() {
     if (!canSubmit || !auth) return;
 
     setLoading(true);
+    setLoadingText("Creating…");
 
     const payload: CreateMiniaturePayload = {
       baseName: baseName.trim(),
@@ -118,13 +123,47 @@ export default function AddMiniaturePage() {
     };
 
     const result = await createMiniature(payload, auth.token);
-    setLoading(false);
 
     if (!result.ok) {
+      setLoading(false);
       toast(result.error, "error");
       return;
     }
 
+    // Upload images for variants that have files selected
+    const variantsWithFiles = variants
+      .map((v, i) => ({ index: i, files: v.files }))
+      .filter((v) => v.files.length > 0);
+
+    if (variantsWithFiles.length > 0) {
+      setLoadingText("Uploading images…");
+
+      // Extract product codes from the created miniature response
+      const created = result.data as {
+        variants: { productCode: string }[];
+      };
+
+      await Promise.all(
+        variantsWithFiles.map(async ({ index, files }) => {
+          const productCode = created.variants[index]?.productCode;
+          if (!productCode) return;
+
+          const uploadResult = await uploadVariantImages(
+            productCode,
+            files,
+            auth.token,
+          );
+          if (!uploadResult.ok) {
+            toast(
+              `Image upload failed for variant ${index + 1}: ${uploadResult.error}`,
+              "error",
+            );
+          }
+        }),
+      );
+    }
+
+    setLoading(false);
     toast("Miniature created successfully", "success");
     router.push("/");
   }
@@ -377,6 +416,93 @@ export default function AddMiniaturePage() {
                       </div>
                     </div>
                   </fieldset>
+
+                  {/* Images */}
+                  <div>
+                    <label className="block text-sm font-medium text-neutral-dark mb-2">
+                      Photos{" "}
+                      <span className="font-normal text-neutral">
+                        (optional)
+                      </span>
+                    </label>
+                    <input
+                      ref={(el) => {
+                        if (el) fileInputRefs.current.set(index, el);
+                        else fileInputRefs.current.delete(index);
+                      }}
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const selected = e.target.files;
+                        if (!selected) return;
+                        setVariants((prev) =>
+                          prev.map((v, i) =>
+                            i === index
+                              ? { ...v, files: Array.from(selected) }
+                              : v,
+                          ),
+                        );
+                      }}
+                    />
+                    <div className="flex items-center gap-3">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() =>
+                          fileInputRefs.current.get(index)?.click()
+                        }
+                      >
+                        {/* Camera icon */}
+                        <svg
+                          className="h-4 w-4"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth={1.5}
+                          stroke="currentColor"
+                          aria-hidden="true"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z"
+                          />
+                        </svg>
+                        Select Photos
+                      </Button>
+                      {variant.files.length > 0 && (
+                        <>
+                          <span className="text-sm text-neutral">
+                            {variant.files.length} image
+                            {variant.files.length !== 1 && "s"} selected
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setVariants((prev) =>
+                                prev.map((v, i) =>
+                                  i === index ? { ...v, files: [] } : v,
+                                ),
+                              );
+                              const input =
+                                fileInputRefs.current.get(index);
+                              if (input) input.value = "";
+                            }}
+                            className="text-sm text-neutral hover:text-red-600 transition-colors"
+                          >
+                            Clear
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </Card>
             ))}
@@ -398,7 +524,7 @@ export default function AddMiniaturePage() {
           className="w-full"
           disabled={!canSubmit || loading}
         >
-          {loading ? "Creating…" : "Create Miniature"}
+          {loading ? loadingText : "Create Miniature"}
         </Button>
       </form>
     </div>
