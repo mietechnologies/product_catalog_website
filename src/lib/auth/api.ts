@@ -5,7 +5,7 @@
  */
 
 import type { ApiResult } from "@/lib/types";
-import type { AuthResponse, AuthUser, PendingRetailer } from "./types";
+import type { AuthResponse, AuthUser, Order, PendingRetailer } from "./types";
 import { endpoints } from "@/lib/api/endpoints";
 
 // ── Generic POST helper ──────────────────────────────────────────────
@@ -247,6 +247,97 @@ export async function updatePassword(
 
     const json = await res.json();
     return { ok: true, data: { token: json.token, user: json.data.user } };
+  } catch (err) {
+    return { ok: false, error: (err as Error).message, status: 0 };
+  }
+}
+
+// ── Orders ───────────────────────────────────────────────────────────
+
+export async function createOrder(
+  token: string,
+  items: { productCode: string; quantity: number }[],
+): Promise<ApiResult<{ order: Order }>> {
+  try {
+    const res = await fetch(endpoints.createOrder(), {
+      method: "POST",
+      headers: { ...authedHeaders(token), "Content-Type": "application/json" },
+      body: JSON.stringify({ items }),
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      return {
+        ok: false,
+        error: body?.message ?? res.statusText,
+        status: res.status,
+      };
+    }
+
+    const json = await res.json();
+    return { ok: true, data: { order: json.data.order } };
+  } catch (err) {
+    return { ok: false, error: (err as Error).message, status: 0 };
+  }
+}
+
+export async function fetchUnfulfilledOrders(
+  token: string,
+  page = 1,
+  limit = 20,
+): Promise<
+  ApiResult<{ orders: Order[]; page: number; totalPages: number; totalItems: number }>
+> {
+  try {
+    const url = `${endpoints.unfulfilledOrders()}?page=${page}&limit=${limit}`;
+    const res = await fetch(url, {
+      headers: authedHeaders(token),
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      return {
+        ok: false,
+        error: body?.message ?? res.statusText,
+        status: res.status,
+      };
+    }
+
+    const json = await res.json();
+    return {
+      ok: true,
+      data: {
+        orders: json.data.orders,
+        page: json.page,
+        totalPages: json.totalPages,
+        totalItems: json.totalItems,
+      },
+    };
+  } catch (err) {
+    return { ok: false, error: (err as Error).message, status: 0 };
+  }
+}
+
+export async function fetchOrderById(
+  id: string,
+  token: string,
+): Promise<ApiResult<{ order: Order }>> {
+  try {
+    const res = await fetch(endpoints.order(id), {
+      headers: authedHeaders(token),
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      return {
+        ok: false,
+        error: body?.message ?? res.statusText,
+        status: res.status,
+      };
+    }
+
+    const json = await res.json();
+    return { ok: true, data: { order: json.data.order } };
   } catch (err) {
     return { ok: false, error: (err as Error).message, status: 0 };
   }

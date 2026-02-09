@@ -59,6 +59,16 @@ export const endpoints = {
   /** PATCH /api/users/me/password — change password */
   updatePassword: () => `${BASE_URL}/api/users/me/password`,
 
+  /** POST /api/orders — create a new order */
+  createOrder: () => `${BASE_URL}/api/orders`,
+
+  /** GET /api/orders/unfulfilled — list unfulfilled orders (paginated) */
+  unfulfilledOrders: () => `${BASE_URL}/api/orders/unfulfilled`,
+
+  /** GET /api/orders/:id — get a single order by ID */
+  order: (id: string) =>
+    `${BASE_URL}/api/orders/${encodeURIComponent(id)}`,
+
   /** POST /api/miniatures/:productCode/variants — add a new variant to a miniature */
   addVariant: (productCode: string) =>
     `${BASE_URL}/api/miniatures/${encodeURIComponent(productCode)}/variants`,

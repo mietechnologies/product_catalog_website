@@ -74,6 +74,16 @@ export default function SlideMenu({ open, onClose }: SlideMenuProps) {
             Browse Catalog
           </Link>
 
+          {auth && auth.user.accountType !== "admin" && (
+            <Link
+              href="/orders/create"
+              onClick={onClose}
+              className={linkClass}
+            >
+              Create Order
+            </Link>
+          )}
+
           {auth && auth.user.accountType === "admin" && (
             <>
               <Link
@@ -126,6 +136,13 @@ export default function SlideMenu({ open, onClose }: SlideMenuProps) {
                   </Link>
                 </div>
               )}
+              <Link
+                href="/admin/orders/pending"
+                onClick={onClose}
+                className={linkClass}
+              >
+                Pending Orders
+              </Link>
             </>
           )}
         </nav>
