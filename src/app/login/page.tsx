@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, KeyboardEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Card from "@/components/ui/Card";
@@ -21,9 +21,8 @@ export default function LoginPage() {
 
   const canSubmit = email.trim() !== "" && password !== "";
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    if (!canSubmit) return;
+  async function doLogin() {
+    if (!canSubmit || loading) return;
 
     setLoading(true);
     const result = await loginAdmin(email, password);
@@ -38,6 +37,15 @@ export default function LoginPage() {
     signIn(data.user, token);
     toast("Signed in successfully", "success");
     router.push("/");
+  }
+
+  function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    doLogin();
+  }
+
+  function handleKeyDown(e: KeyboardEvent) {
+    if (e.key === "Enter") doLogin();
   }
 
   return (
@@ -61,6 +69,7 @@ export default function LoginPage() {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={handleKeyDown}
               placeholder="admin@example.com"
               required
             />
@@ -79,6 +88,7 @@ export default function LoginPage() {
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={handleKeyDown}
               placeholder="Enter your password"
               required
             />
