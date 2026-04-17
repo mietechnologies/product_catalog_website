@@ -7,6 +7,7 @@ import SearchBar from "@/components/catalog/SearchBar";
 import FiltersBar from "@/components/catalog/FiltersBar";
 import ProductGrid from "@/components/catalog/ProductGrid";
 import { useToast } from "@/components/ui/Toast";
+import { useAuth } from "@/lib/auth/AuthContext";
 import { fetchCatalog } from "@/lib/api/client";
 import type { CatalogEntry, CatalogFilters, SortOption } from "@/lib/types";
 
@@ -14,6 +15,7 @@ function CatalogPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
+  const { auth } = useAuth();
 
   // Derive initial filters from URL
   function filtersFromParams(): CatalogFilters {
@@ -77,7 +79,7 @@ function CatalogPageInner() {
       setIsLoading(true);
       setHasError(false);
 
-      fetchCatalog(currentFilters).then((result) => {
+      fetchCatalog(currentFilters, auth?.token).then((result) => {
         if (result.ok) {
           setEntries(result.data.entries);
         } else {
@@ -88,7 +90,7 @@ function CatalogPageInner() {
         setIsLoading(false);
       });
     },
-    [toast]
+    [auth?.token, toast]
   );
 
   // Fetch data whenever filters change
@@ -97,7 +99,7 @@ function CatalogPageInner() {
     setIsLoading(true);
     setHasError(false);
 
-    fetchCatalog(filters).then((result) => {
+    fetchCatalog(filters, auth?.token).then((result) => {
       if (cancelled) return;
       if (result.ok) {
         setEntries(result.data.entries);
@@ -112,7 +114,7 @@ function CatalogPageInner() {
     return () => {
       cancelled = true;
     };
-  }, [filters, toast]);
+  }, [filters, auth?.token, toast]);
 
   function updateFilters(partial: Partial<CatalogFilters>) {
     const next = { ...filters, ...partial };

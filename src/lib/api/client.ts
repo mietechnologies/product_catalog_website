@@ -338,7 +338,8 @@ function applyAllFiltersMock(
 
 /** Fetch catalog entries with optional filters */
 export async function fetchCatalog(
-  filters: CatalogFilters
+  filters: CatalogFilters,
+  token?: string,
 ): Promise<ApiResult<CatalogResponse>> {
   if (!USE_LIVE_API) {
     try {
@@ -350,6 +351,7 @@ export async function fetchCatalog(
   }
 
   const hasSearchQuery = Boolean(filters.query?.trim());
+  const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
 
   let result: ApiResult<BackendCatalogResponse>;
 
@@ -357,13 +359,15 @@ export async function fetchCatalog(
     // Use the full-text search endpoint (relevance-ranked results)
     const params = buildSearchParams(filters.query!, filters);
     result = await fetchJson<BackendCatalogResponse>(
-      `${endpoints.search()}?${params}`
+      `${endpoints.search()}?${params}`,
+      { headers: authHeaders },
     );
   } else {
     // Use the list endpoint with server-side filters
     const params = buildListParams(filters);
     result = await fetchJson<BackendCatalogResponse>(
-      `${endpoints.miniatures()}?${params}`
+      `${endpoints.miniatures()}?${params}`,
+      { headers: authHeaders },
     );
   }
 
@@ -381,7 +385,8 @@ export async function fetchCatalog(
 
 /** Fetch a base item with its variants by slug (slugified base name) */
 export async function fetchItem(
-  slug: string
+  slug: string,
+  token?: string,
 ): Promise<ApiResult<BaseItem>> {
   if (!USE_LIVE_API) {
     try {
@@ -393,9 +398,12 @@ export async function fetchItem(
     }
   }
 
+  const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+
   // Fetch all items and find the group matching this slug
   const result = await fetchJson<BackendCatalogResponse>(
-    `${endpoints.miniatures()}?limit=1000`
+    `${endpoints.miniatures()}?limit=1000`,
+    { headers: authHeaders },
   );
   if (!result.ok) return result;
 
@@ -434,7 +442,8 @@ export async function fetchItem(
 
 /** Fetch a single product by slug (product code, e.g. "M-DR-0001") */
 export async function fetchProduct(
-  slug: string
+  slug: string,
+  token?: string,
 ): Promise<ApiResult<Product>> {
   if (!USE_LIVE_API) {
     try {
@@ -447,8 +456,11 @@ export async function fetchProduct(
     }
   }
 
+  const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+
   const result = await fetchJson<BackendMiniatureItem>(
-    endpoints.miniature(slug)
+    endpoints.miniature(slug),
+    { headers: authHeaders },
   );
   if (!result.ok) return result;
 
@@ -458,7 +470,8 @@ export async function fetchProduct(
   // Determine if this product has siblings (is part of a multi-variant group)
   // by fetching the full list and checking
   const listResult = await fetchJson<BackendCatalogResponse>(
-    `${endpoints.miniatures()}?limit=1000`
+    `${endpoints.miniatures()}?limit=1000`,
+    { headers: authHeaders },
   );
   let parentItemSlug: string | undefined;
   if (listResult.ok) {

@@ -32,7 +32,7 @@ export default function ProductPage() {
     setIsLoading(true);
     setError(null);
 
-    fetchProduct(params.slug).then((result) => {
+    fetchProduct(params.slug, auth?.token).then((result) => {
       if (result.ok) {
         setProduct(result.data);
       } else if (result.status === 404) {
@@ -43,7 +43,7 @@ export default function ProductPage() {
       }
       setIsLoading(false);
     });
-  }, [params.slug, toast]);
+  }, [params.slug, auth?.token, toast]);
 
   useEffect(() => {
     loadProduct();
@@ -124,7 +124,7 @@ export default function ProductPage() {
           />
 
           {/* Admin: Upload Photos */}
-          {auth && (
+          {auth?.user.accountType === "admin" && (
             <ImageUpload productCode={product.productCode} onSuccess={loadProduct} />
           )}
         </div>
@@ -170,7 +170,7 @@ export default function ProductPage() {
           <PriceBlock price={product.price} />
 
           {/* Admin: Edit Details + Add Variant */}
-          {auth && (
+          {auth?.user.accountType === "admin" && (
             <div className="flex gap-2">
               <Button variant="ghost" onClick={() => setEditOpen(true)}>
                 <svg
@@ -214,7 +214,7 @@ export default function ProductPage() {
       </div>
 
       {/* Edit modal */}
-      {auth && (
+      {auth?.user.accountType === "admin" && (
         <EditVariantModal
           open={editOpen}
           onClose={() => setEditOpen(false)}
@@ -232,7 +232,7 @@ export default function ProductPage() {
       )}
 
       {/* Add variant modal */}
-      {auth && (
+      {auth?.user.accountType === "admin" && (
         <AddVariantModal
           open={addOpen}
           onClose={() => setAddOpen(false)}
