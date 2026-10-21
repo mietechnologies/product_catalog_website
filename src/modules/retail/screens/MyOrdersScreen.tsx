@@ -8,13 +8,13 @@ import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { fetchMyOrders } from "@/lib/auth/api";
-import type { Order } from "@/lib/auth/types";
+import { fetchMyOrders } from "../api";
+import type { Order } from "../types";
 import {
   getOrderStatus,
   ORDER_STATUS_BADGE_VARIANT,
   ORDER_STATUS_RANK,
-} from "@/lib/auth/orderStatus";
+} from "../orderStatus";
 import { cn } from "@/lib/utils";
 
 type SortKey = "id" | "createdAt" | "itemCount" | "status";
@@ -41,7 +41,7 @@ function SortIcon({ direction }: { direction: SortDir }) {
   );
 }
 
-export default function MyOrdersPage() {
+export default function MyOrdersScreen() {
   const router = useRouter();
   const { toast } = useToast();
   const { auth, ready } = useAuth();

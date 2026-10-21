@@ -6,12 +6,12 @@ import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
-import { createRetailer } from "@/lib/auth/api";
+import { createRetailer } from "../api";
 import PasswordChecklist, {
   allRequirementsMet,
 } from "@/components/auth/PasswordChecklist";
 
-export default function CreateRetailerPage() {
+export default function RetailerRegistrationScreen() {
   const { toast } = useToast();
 
   const [merchantName, setMerchantName] = useState("");

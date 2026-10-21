@@ -1,0 +1,12 @@
+/**
+ * Feature flags.
+ *
+ * Flags are resolved at build time from NEXT_PUBLIC_* environment variables
+ * (Next.js inlines them into the client bundle), so changing one requires a
+ * rebuild. Each flag is off unless its variable is exactly "true".
+ */
+
+export const features = {
+  /** Retail module: retailer accounts, wholesale ordering, order management. */
+  retail: process.env.NEXT_PUBLIC_FEATURE_RETAIL === "true",
+} as const;

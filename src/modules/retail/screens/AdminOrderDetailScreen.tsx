@@ -6,10 +6,10 @@ import Link from "next/link";
 import Card from "@/components/ui/Card";
 import { useToast } from "@/components/ui/Toast";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { fetchOrderById } from "@/lib/auth/api";
-import type { Order } from "@/lib/auth/types";
+import { fetchOrderById } from "../api";
+import type { Order } from "../types";
 
-export default function OrderDetailPage() {
+export default function AdminOrderDetailScreen() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { toast } = useToast();

@@ -11,6 +11,12 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
+
+# Feature flags are inlined at build time (NEXT_PUBLIC_*), so pass them as
+# build args, e.g. `docker build --build-arg NEXT_PUBLIC_FEATURE_RETAIL=true .`
+ARG NEXT_PUBLIC_FEATURE_RETAIL=false
+ENV NEXT_PUBLIC_FEATURE_RETAIL=$NEXT_PUBLIC_FEATURE_RETAIL
+
 RUN npm run build
 
 # ── Stage 3: Production image ────────────────────────────────────────
