@@ -5,9 +5,9 @@ import { createPortal } from "react-dom";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useToast } from "@/components/ui/Toast";
 import { updateVariant } from "@/lib/api/client";
-import { cn } from "@/lib/utils";
+import { cn, isHttpUrl } from "@/lib/utils";
 import { PRODUCT_SIZES } from "@/lib/types";
-import type { UpdateVariantPayload } from "@/lib/types";
+import type { Attribution, UpdateVariantPayload } from "@/lib/types";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
@@ -20,6 +20,7 @@ interface EditVariantInitial {
   cost: number;
   wholesale: number;
   msrp: number;
+  attribution?: Attribution | null;
 }
 
 interface EditVariantModalProps {
@@ -48,6 +49,10 @@ export default function EditVariantModal({
   const [cost, setCost] = useState(initial.cost ? String(initial.cost) : "");
   const [wholesale, setWholesale] = useState(initial.wholesale ? String(initial.wholesale) : "");
   const [msrp, setMsrp] = useState(initial.msrp ? String(initial.msrp) : "");
+  const initialCreator = initial.attribution?.creator ?? "";
+  const initialModelUrl = initial.attribution?.modelUrl ?? "";
+  const [creator, setCreator] = useState(initialCreator);
+  const [modelUrl, setModelUrl] = useState(initialModelUrl);
 
   useEffect(() => setMounted(true), []);
 
@@ -59,7 +64,12 @@ export default function EditVariantModal({
     setCost(initial.cost ? String(initial.cost) : "");
     setWholesale(initial.wholesale ? String(initial.wholesale) : "");
     setMsrp(initial.msrp ? String(initial.msrp) : "");
-  }, [initial.name, initial.description, initial.size, initial.cost, initial.wholesale, initial.msrp]);
+    setCreator(initialCreator);
+    setModelUrl(initialModelUrl);
+  }, [initial.name, initial.description, initial.size, initial.cost, initial.wholesale, initial.msrp, initialCreator, initialModelUrl]);
+
+  const trimmedModelUrl = modelUrl.trim();
+  const modelUrlInvalid = trimmedModelUrl !== "" && !isHttpUrl(trimmedModelUrl);
 
   async function handleSave() {
     if (!auth) return;
@@ -80,6 +90,17 @@ export default function EditVariantModal({
     if (msrpNum !== (initial.msrp || undefined)) priceChanges.msrp = msrpNum;
 
     if (Object.keys(priceChanges).length > 0) payload.price = priceChanges;
+
+    const trimmedCreator = creator.trim();
+    if (trimmedCreator !== initialCreator || trimmedModelUrl !== initialModelUrl) {
+      payload.attribution =
+        trimmedCreator || trimmedModelUrl
+          ? {
+              ...(trimmedCreator && { creator: trimmedCreator }),
+              ...(trimmedModelUrl && { modelUrl: trimmedModelUrl }),
+            }
+          : null;
+    }
 
     if (Object.keys(payload).length === 0) {
       onClose();
@@ -203,12 +224,53 @@ export default function EditVariantModal({
               </div>
             </div>
 
+            {/* Attribution (shared by every variant of this miniature) */}
+            <div className="space-y-3">
+              <div>
+                <h3 className="text-sm font-medium text-gray-700">
+                  Attribution <span className="text-neutral text-xs">(optional)</span>
+                </h3>
+                <p className="text-xs text-neutral mt-0.5">
+                  Credits the 3D model&apos;s creator. Applies to all variants. Leave blank for in-house models.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="edit-attribution-creator" className="block text-sm font-medium text-gray-700 mb-1">
+                    Creator
+                  </label>
+                  <Input
+                    id="edit-attribution-creator"
+                    value={creator}
+                    onChange={(e) => setCreator(e.target.value)}
+                    placeholder="e.g. Jane Sculptor"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="edit-attribution-url" className="block text-sm font-medium text-gray-700 mb-1">
+                    Model URL
+                  </label>
+                  <Input
+                    id="edit-attribution-url"
+                    type="url"
+                    value={modelUrl}
+                    onChange={(e) => setModelUrl(e.target.value)}
+                    placeholder="https://…"
+                    aria-invalid={modelUrlInvalid}
+                  />
+                </div>
+              </div>
+              {modelUrlInvalid && (
+                <p className="text-xs text-red-600">Model URL must start with http:// or https://</p>
+              )}
+            </div>
+
             {/* Actions */}
             <div className="flex justify-end gap-3 pt-2">
               <Button variant="ghost" onClick={onClose} disabled={saving}>
                 Cancel
               </Button>
-              <Button onClick={handleSave} disabled={saving}>
+              <Button onClick={handleSave} disabled={saving || modelUrlInvalid}>
                 {saving ? "Saving…" : "Save"}
               </Button>
             </div>

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { notFound } from "next/navigation";
 import Breadcrumbs from "@/components/product/Breadcrumbs";
+import AttributionCredit from "@/components/product/AttributionCredit";
 import VariantList from "@/components/item/VariantList";
 import VariantDetailPanel from "@/components/item/VariantDetailPanel";
 import Button from "@/components/ui/Button";
@@ -112,6 +113,7 @@ export default function ItemPage() {
       <div>
         <h1 className="text-2xl font-bold text-gray-900">{item.name}</h1>
         <p className="text-sm text-neutral mt-1">{item.description}</p>
+        <AttributionCredit attribution={item.attribution} className="mt-2" />
       </div>
 
       {/* Two-column layout */}
