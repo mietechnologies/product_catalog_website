@@ -69,6 +69,13 @@ export const endpoints = {
   order: (id: string) =>
     `${BASE_URL}/api/orders/${encodeURIComponent(id)}`,
 
+  /** GET /api/orders/mine — list the current user's own orders (paginated) */
+  myOrders: () => `${BASE_URL}/api/orders/mine`,
+
+  /** GET /api/orders/mine/:id — get one of the current user's own orders by ID */
+  myOrder: (id: string) =>
+    `${BASE_URL}/api/orders/mine/${encodeURIComponent(id)}`,
+
   /** POST /api/miniatures/:productCode/variants — add a new variant to a miniature */
   addVariant: (productCode: string) =>
     `${BASE_URL}/api/miniatures/${encodeURIComponent(productCode)}/variants`,

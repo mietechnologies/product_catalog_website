@@ -343,6 +343,68 @@ export async function fetchOrderById(
   }
 }
 
+export async function fetchMyOrders(
+  token: string,
+  page = 1,
+  limit = 100,
+): Promise<
+  ApiResult<{ orders: Order[]; page: number; totalPages: number; totalItems: number }>
+> {
+  try {
+    const url = `${endpoints.myOrders()}?page=${page}&limit=${limit}`;
+    const res = await fetch(url, {
+      headers: authedHeaders(token),
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      return {
+        ok: false,
+        error: body?.message ?? res.statusText,
+        status: res.status,
+      };
+    }
+
+    const json = await res.json();
+    return {
+      ok: true,
+      data: {
+        orders: json.data.orders,
+        page: json.page,
+        totalPages: json.totalPages,
+        totalItems: json.totalItems,
+      },
+    };
+  } catch (err) {
+    return { ok: false, error: (err as Error).message, status: 0 };
+  }
+}
+
+export async function fetchMyOrderById(
+  id: string,
+  token: string,
+): Promise<ApiResult<{ order: Order }>> {
+  try {
+    const res = await fetch(endpoints.myOrder(id), {
+      headers: authedHeaders(token),
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      return {
+        ok: false,
+        error: body?.message ?? res.statusText,
+        status: res.status,
+      };
+    }
+
+    const json = await res.json();
+    return { ok: true, data: { order: json.data.order } };
+  } catch (err) {
+    return { ok: false, error: (err as Error).message, status: 0 };
+  }
+}
+
 export function createAdmin(
   fields: {
     email: string;

@@ -84,6 +84,12 @@ export default function SlideMenu({ open, onClose }: SlideMenuProps) {
             </Link>
           )}
 
+          {auth && auth.user.accountType === "retailer" && (
+            <Link href="/orders" onClick={onClose} className={linkClass}>
+              My Orders
+            </Link>
+          )}
+
           {auth && auth.user.accountType === "admin" && (
             <>
               <Link
