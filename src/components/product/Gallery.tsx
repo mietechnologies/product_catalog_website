@@ -4,15 +4,14 @@ import { useCallback, useState } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import PlaceholderImage from "@/components/ui/PlaceholderImage";
-import type { CreatureType } from "@/lib/types";
 
 interface GalleryProps {
   images: string[];
   name: string;
-  creatureType: CreatureType;
+  category: string;
 }
 
-export default function Gallery({ images, name, creatureType }: GalleryProps) {
+export default function Gallery({ images, name, category }: GalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   // Track which image indices have failed to load
   const [failedIndices, setFailedIndices] = useState<Set<number>>(new Set());
@@ -42,7 +41,7 @@ export default function Gallery({ images, name, creatureType }: GalleryProps) {
         ) : (
           <PlaceholderImage
             name={`${name} - image ${activeIndex + 1}`}
-            creatureType={creatureType}
+            category={category}
             className="w-full h-full"
             size="lg"
           />
@@ -86,7 +85,7 @@ export default function Gallery({ images, name, creatureType }: GalleryProps) {
                 ) : (
                   <PlaceholderImage
                     name={`${name} thumbnail ${idx + 1}`}
-                    creatureType={creatureType}
+                    category={category}
                     className="w-full h-full"
                     size="sm"
                   />

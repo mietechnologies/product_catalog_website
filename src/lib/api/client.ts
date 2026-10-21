@@ -5,22 +5,24 @@
  * responses into frontend types. Otherwise falls back to the mock server.
  *
  * The backend now supports:
- *  - Server-side filters on GET /api/miniatures (category, size, hasVariants, minPrice, maxPrice)
- *  - Full-text search on GET /api/miniatures/search?q=
+ *  - Server-side filters on GET /api/products (productType, category, collection, size, hasVariants, minPrice, maxPrice)
+ *  - Full-text search on GET /api/products/search?q=
  */
 
 import type {
   AddVariantPayload,
   ApiResult,
   BackendCatalogResponse,
-  BackendMiniatureItem,
+  BackendProductItem,
   BaseItem,
   CatalogEntry,
   CatalogFilters,
   CatalogResponse,
   CreateMiniaturePayload,
+  CreatePrintPayload,
   CreatureType,
   Product,
+  ProductMeta,
   ProductSize,
   SortOption,
   UpdateVariantPayload,
@@ -90,9 +92,28 @@ function imagesMapToArray(images: Record<string, string>): string[] {
     .map((k) => images[k]);
 }
 
+/** Base name of a backend item: the parent miniature's name, or the print's name */
+function baseNameOf(item: BackendProductItem): string {
+  return item.baseName ?? parseBackendName(item.name).baseName;
+}
+
+/** Fields shared by catalog entries, base items, and products */
+function typeFields(item: BackendProductItem) {
+  const isMiniature = item.productType === "miniature";
+  return {
+    productType: item.productType,
+    category: item.category,
+    collections: item.collections ?? [],
+    ...(isMiniature && {
+      size: item.size as ProductSize,
+      creatureType: item.category as CreatureType,
+    }),
+  };
+}
+
 /** Convert a backend item to a frontend Product */
 function backendToProduct(
-  item: BackendMiniatureItem,
+  item: BackendProductItem,
   parentItemSlug?: string
 ): Product {
   const imageArray = imagesMapToArray(item.images);
@@ -104,11 +125,13 @@ function backendToProduct(
     description: item.description ?? "",
     images: imageArray,
     thumbnail: item.thumbnail,
-    size: item.size as ProductSize,
-    creatureType: item.category as CreatureType,
+    ...typeFields(item),
     attributes: {
-      Size: item.size,
+      ...(item.size ? { Size: item.size } : {}),
       Category: item.category,
+      ...(item.collections?.length
+        ? { Collections: item.collections.join(", ") }
+        : {}),
       ...(item.cost ? { "Print Cost": `$${item.cost.toFixed(2)}` } : {}),
       ...(item.wholesale
         ? { Wholesale: `$${item.wholesale.toFixed(2)}` }
@@ -119,7 +142,7 @@ function backendToProduct(
 }
 
 /** Get the first available image URL for display, or empty string */
-function primaryImage(item: BackendMiniatureItem): string {
+function primaryImage(item: BackendProductItem): string {
   if (item.thumbnail) return item.thumbnail;
   const urls = imagesMapToArray(item.images);
   return urls[0] ?? "";
@@ -127,17 +150,19 @@ function primaryImage(item: BackendMiniatureItem): string {
 
 /**
  * Group a flat list of backend items by base name.
- * Returns Map<baseName, BackendMiniatureItem[]>.
+ * Only miniature variants are grouped; every print is its own group.
+ * Returns Map<baseName, BackendProductItem[]>.
  */
 function groupByBaseName(
-  items: BackendMiniatureItem[]
-): Map<string, BackendMiniatureItem[]> {
-  const groups = new Map<string, BackendMiniatureItem[]>();
+  items: BackendProductItem[]
+): Map<string, BackendProductItem[]> {
+  const groups = new Map<string, BackendProductItem[]>();
   for (const item of items) {
-    const { baseName } = parseBackendName(item.name);
-    const existing = groups.get(baseName) ?? [];
+    const key =
+      item.productType === "miniature" ? baseNameOf(item) : item.productCode;
+    const existing = groups.get(key) ?? [];
     existing.push(item);
-    groups.set(baseName, existing);
+    groups.set(key, existing);
   }
   return groups;
 }
@@ -148,11 +173,11 @@ function groupByBaseName(
  *  - Groups with 2+ items → base item, type "item", slug = slugified base name
  */
 function groupsToCatalogEntries(
-  groups: Map<string, BackendMiniatureItem[]>
+  groups: Map<string, BackendProductItem[]>
 ): CatalogEntry[] {
   const entries: CatalogEntry[] = [];
 
-  for (const [baseName, variants] of groups) {
+  for (const variants of groups.values()) {
     if (variants.length === 1) {
       const item = variants[0];
       entries.push({
@@ -161,14 +186,14 @@ function groupsToCatalogEntries(
         productCode: item.productCode,
         image: primaryImage(item),
         price: item.msrp,
-        size: item.size as ProductSize,
-        creatureType: item.category as CreatureType,
+        ...typeFields(item),
         hasVariants: false,
         type: "product",
       });
     } else {
       const prices = variants.map((v) => v.msrp).filter((p) => p > 0);
       const representative = variants[0];
+      const baseName = baseNameOf(representative);
       entries.push({
         slug: toSlug(baseName),
         name: baseName,
@@ -177,8 +202,7 @@ function groupsToCatalogEntries(
           prices.length > 0
             ? { min: Math.min(...prices), max: Math.max(...prices) }
             : undefined,
-        size: representative.size as ProductSize,
-        creatureType: representative.category as CreatureType,
+        ...typeFields(representative),
         hasVariants: true,
         type: "item",
       });
@@ -191,13 +215,15 @@ function groupsToCatalogEntries(
 // ── Build query strings for backend endpoints ────────────────────────
 
 /**
- * Build query params for GET /api/miniatures from frontend filters.
- * Passes category, size, hasVariants, minPrice, maxPrice to the backend.
+ * Build query params for GET /api/products from frontend filters.
+ * Passes productType, category, collection, size, hasVariants, minPrice, maxPrice to the backend.
  */
 function buildListParams(filters: CatalogFilters): URLSearchParams {
   const params = new URLSearchParams();
   params.set("limit", "1000");
-  if (filters.creatureType) params.set("category", filters.creatureType);
+  if (filters.productType) params.set("productType", filters.productType);
+  if (filters.category) params.set("category", filters.category);
+  if (filters.collection) params.set("collection", filters.collection);
   if (filters.size) params.set("size", filters.size);
   if (filters.hasVariants === true) params.set("hasVariants", "true");
   if (filters.priceMin !== undefined)
@@ -208,7 +234,7 @@ function buildListParams(filters: CatalogFilters): URLSearchParams {
 }
 
 /**
- * Build query params for GET /api/miniatures/search.
+ * Build query params for GET /api/products/search.
  */
 function buildSearchParams(
   query: string,
@@ -217,9 +243,16 @@ function buildSearchParams(
   const params = new URLSearchParams();
   params.set("q", query);
   params.set("limit", "1000");
-  // The search endpoint doesn't accept filter params,
+  if (filters.productType) params.set("productType", filters.productType);
+  // The search endpoint doesn't accept other filter params,
   // so remaining filters are applied client-side after grouping.
   return params;
+}
+
+/** Case-insensitive collection membership */
+function inCollection(entry: CatalogEntry, collection: string): boolean {
+  const c = collection.toLowerCase();
+  return entry.collections.some((x) => x.toLowerCase() === c);
 }
 
 // ── Client-side post-processing ──────────────────────────────────────
@@ -252,7 +285,7 @@ function sortEntries(
 /**
  * Apply filters that couldn't be handled server-side.
  * For the list endpoint: only sort remains (backend handles the rest).
- * For the search endpoint: category, size, hasVariants, price, and sort.
+ * For the search endpoint: category, collection, size, hasVariants, price, and sort.
  */
 function applyRemainingFilters(
   entries: CatalogEntry[],
@@ -263,8 +296,11 @@ function applyRemainingFilters(
 
   if (searchMode) {
     // Search endpoint doesn't support these filters, apply client-side
-    if (filters.creatureType) {
-      result = result.filter((e) => e.creatureType === filters.creatureType);
+    if (filters.category) {
+      result = result.filter((e) => e.category === filters.category);
+    }
+    if (filters.collection) {
+      result = result.filter((e) => inCollection(e, filters.collection!));
     }
     if (filters.size) {
       result = result.filter((e) => e.size === filters.size);
@@ -299,7 +335,8 @@ function matchesQuery(entry: CatalogEntry, query: string): boolean {
   return (
     entry.name.toLowerCase().includes(q) ||
     (entry.productCode?.toLowerCase().includes(q) ?? false) ||
-    entry.creatureType.toLowerCase().includes(q)
+    entry.category.toLowerCase().includes(q) ||
+    entry.collections.some((c) => c.toLowerCase().includes(q))
   );
 }
 
@@ -312,8 +349,14 @@ function applyAllFiltersMock(
   if (filters.query) {
     result = result.filter((e) => matchesQuery(e, filters.query!));
   }
-  if (filters.creatureType) {
-    result = result.filter((e) => e.creatureType === filters.creatureType);
+  if (filters.productType) {
+    result = result.filter((e) => e.productType === filters.productType);
+  }
+  if (filters.category) {
+    result = result.filter((e) => e.category === filters.category);
+  }
+  if (filters.collection) {
+    result = result.filter((e) => inCollection(e, filters.collection!));
   }
   if (filters.size) {
     result = result.filter((e) => e.size === filters.size);
@@ -366,7 +409,7 @@ export async function fetchCatalog(
     // Use the list endpoint with server-side filters
     const params = buildListParams(filters);
     result = await fetchJson<BackendCatalogResponse>(
-      `${endpoints.miniatures()}?${params}`,
+      `${endpoints.products()}?${params}`,
       { headers: authHeaders },
     );
   }
@@ -400,9 +443,9 @@ export async function fetchItem(
 
   const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 
-  // Fetch all items and find the group matching this slug
+  // Fetch all miniatures (only miniatures have variants) and find the group matching this slug
   const result = await fetchJson<BackendCatalogResponse>(
-    `${endpoints.miniatures()}?limit=1000`,
+    `${endpoints.products()}?productType=miniature&limit=1000`,
     { headers: authHeaders },
   );
   if (!result.ok) return result;
@@ -423,8 +466,7 @@ export async function fetchItem(
           representative.description ??
           `${baseName} — available in ${variants.length} variant${variants.length > 1 ? "s" : ""}.`,
         image: primaryImage(representative),
-        creatureType: representative.category as CreatureType,
-        size: representative.size as ProductSize,
+        ...typeFields(representative),
         hasVariants: variants.length > 1,
         variants: variants.map((v) => backendToProduct(v, itemSlug)),
         priceRange:
@@ -458,19 +500,24 @@ export async function fetchProduct(
 
   const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 
-  const result = await fetchJson<BackendMiniatureItem>(
-    endpoints.miniature(slug),
+  const result = await fetchJson<BackendProductItem>(
+    endpoints.product(slug),
     { headers: authHeaders },
   );
   if (!result.ok) return result;
 
   const item = result.data;
-  const { baseName } = parseBackendName(item.name);
+  const baseName = baseNameOf(item);
+
+  // Prints never have variants, so only miniatures need the sibling check
+  if (item.productType !== "miniature") {
+    return { ok: true, data: backendToProduct(item) };
+  }
 
   // Determine if this product has siblings (is part of a multi-variant group)
   // by fetching the full list and checking
   const listResult = await fetchJson<BackendCatalogResponse>(
-    `${endpoints.miniatures()}?limit=1000`,
+    `${endpoints.products()}?productType=miniature&limit=1000`,
     { headers: authHeaders },
   );
   let parentItemSlug: string | undefined;
@@ -501,6 +548,37 @@ export async function createMiniature(
     },
     body: JSON.stringify(payload),
   });
+}
+
+/** Create a new print, e.g. a figurine, toy, or decor piece (admin only) */
+export async function createPrint(
+  payload: CreatePrintPayload,
+  token: string,
+): Promise<ApiResult<{ productCode: string }>> {
+  return fetchJson(endpoints.products(), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+/** Fetch the collections currently in use, for the catalog filter */
+export async function fetchProductMeta(): Promise<ApiResult<ProductMeta>> {
+  if (!USE_LIVE_API) {
+    try {
+      const data = await mock.getProductMeta();
+      return { ok: true, data };
+    } catch (err) {
+      return { ok: false, error: (err as Error).message, status: 500 };
+    }
+  }
+
+  const result = await fetchJson<ProductMeta>(endpoints.productMeta());
+  if (!result.ok) return result;
+  return { ok: true, data: { collections: result.data.collections ?? [] } };
 }
 
 /** Upload images for a variant (admin only, multipart) */
@@ -559,7 +637,7 @@ export async function updateVariant(
   updates: UpdateVariantPayload,
   token: string,
 ): Promise<ApiResult<unknown>> {
-  return fetchJson(endpoints.miniature(productCode), {
+  return fetchJson(endpoints.product(productCode), {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",

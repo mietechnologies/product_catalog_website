@@ -218,9 +218,13 @@ When `NEXT_PUBLIC_API_URL` is **not set** (or empty), the app automatically fall
 
 | Frontend function  | Backend endpoint                          | Purpose                            |
 | ------------------ | ----------------------------------------- | ---------------------------------- |
-| `fetchCatalog()`   | `GET /api/miniatures?limit=1000`          | Fetch all variants, group & filter client-side |
-| `fetchItem(slug)`  | `GET /api/miniatures?limit=1000`          | Fetch all, find group by base name |
-| `fetchProduct(id)` | `GET /api/miniatures/:productCode`        | Fetch single variant by code       |
+| `fetchCatalog()`   | `GET /api/products?limit=1000` (or `/api/products/search`) | Fetch every product type, group miniature variants, filter client-side |
+| `fetchItem(slug)`  | `GET /api/products?productType=miniature&limit=1000` | Fetch miniatures, find group by base name |
+| `fetchProduct(id)` | `GET /api/products/:productCode`          | Fetch a miniature variant or print by code |
+| `fetchProductMeta()` | `GET /api/products/meta`                | Collections in use, for the catalog filter |
+| `createPrint()`    | `POST /api/products`                      | Create a print (figurine, toy, decor, ...) |
+
+The catalog has tabs for **All**, **Miniatures**, and **Prints**. Miniatures keep size, creature type, and variants; prints are single products with a print category (Toy, Decor, Figurine, ...). Any product can belong to collections such as "Halloween".
 
 All requests include the `x-api-key` header automatically.
 

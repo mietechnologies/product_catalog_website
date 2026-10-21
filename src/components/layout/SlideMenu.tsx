@@ -88,6 +88,13 @@ export default function SlideMenu({ open, onClose }: SlideMenuProps) {
               >
                 Add Miniature
               </Link>
+              <Link
+                href="/admin/prints/add"
+                onClick={onClose}
+                className={linkClass}
+              >
+                Add Print
+              </Link>
               <RetailAdminMenuLinks onClose={onClose} linkClass={linkClass} />
             </>
           )}

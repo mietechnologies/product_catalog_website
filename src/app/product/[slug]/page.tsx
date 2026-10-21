@@ -102,6 +102,8 @@ export default function ProductPage() {
   }
   crumbs.push({ label: product.name });
 
+  const isMiniature = product.productType === "miniature";
+
   // Extract price numbers from attributes for the edit modal
   const costStr = product.attributes["Print Cost"];
   const wholesaleStr = product.attributes["Wholesale"];
@@ -120,7 +122,7 @@ export default function ProductPage() {
           <Gallery
             images={product.images}
             name={product.name}
-            creatureType={product.creatureType}
+            category={product.category}
           />
 
           {/* Admin: Upload Photos */}
@@ -140,8 +142,11 @@ export default function ProductPage() {
 
           {/* Badges */}
           <div className="flex flex-wrap gap-2">
-            <Badge variant="outline">{product.size}</Badge>
-            <Badge>{product.creatureType}</Badge>
+            {product.size && <Badge variant="outline">{product.size}</Badge>}
+            <Badge>{product.category}</Badge>
+            {product.collections.map((c) => (
+              <Badge key={c} variant="accent">{c}</Badge>
+            ))}
           </div>
 
           {/* Description */}
@@ -190,24 +195,26 @@ export default function ProductPage() {
                 </svg>
                 Edit Details
               </Button>
-              <Button variant="ghost" onClick={() => setAddOpen(true)}>
-                <svg
-                  className="h-4 w-4"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 4.5v15m7.5-7.5h-15"
-                  />
-                </svg>
-                Add Variant
-              </Button>
+              {isMiniature && (
+                <Button variant="ghost" onClick={() => setAddOpen(true)}>
+                  <svg
+                    className="h-4 w-4"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 4.5v15m7.5-7.5h-15"
+                    />
+                  </svg>
+                  Add Variant
+                </Button>
+              )}
             </div>
           )}
         </div>
@@ -231,8 +238,8 @@ export default function ProductPage() {
         />
       )}
 
-      {/* Add variant modal */}
-      {auth?.user.accountType === "admin" && (
+      {/* Add variant modal (miniatures only) */}
+      {auth?.user.accountType === "admin" && isMiniature && (
         <AddVariantModal
           open={addOpen}
           onClose={() => setAddOpen(false)}

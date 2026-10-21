@@ -9,20 +9,26 @@ export const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 export const endpoints = {
   /**
-   * GET /api/miniatures?page=&limit=&category=&size=&hasVariants=&minPrice=&maxPrice=
-   * Paginated list with optional server-side filters.
+   * GET /api/products?page=&limit=&productType=&category=&collection=&size=&hasVariants=&minPrice=&maxPrice=
+   * Paginated list of every product type with optional server-side filters.
    */
-  miniatures: () => `${BASE_URL}/api/miniatures`,
+  products: () => `${BASE_URL}/api/products`,
 
   /**
-   * GET /api/miniatures/search?q=&page=&limit=
+   * GET /api/products/search?q=&productType=&page=&limit=
    * Full-text search with relevance scoring.
    */
-  search: () => `${BASE_URL}/api/miniatures/search`,
+  search: () => `${BASE_URL}/api/products/search`,
 
-  /** GET /api/miniatures/:productCode — single variant by product code */
-  miniature: (productCode: string) =>
-    `${BASE_URL}/api/miniatures/${encodeURIComponent(productCode)}`,
+  /** GET /api/products/meta — product types, categories, and collections in use */
+  productMeta: () => `${BASE_URL}/api/products/meta`,
+
+  /** GET|PATCH /api/products/:productCode — single sellable unit (miniature variant or print) */
+  product: (productCode: string) =>
+    `${BASE_URL}/api/products/${encodeURIComponent(productCode)}`,
+
+  /** POST /api/miniatures — create a miniature with variants */
+  miniatures: () => `${BASE_URL}/api/miniatures`,
 
   /** POST /api/keys/validate — validate an API key */
   validateApiKey: () => `${BASE_URL}/api/keys/validate`,
@@ -46,7 +52,7 @@ export const endpoints = {
   addVariant: (productCode: string) =>
     `${BASE_URL}/api/miniatures/${encodeURIComponent(productCode)}/variants`,
 
-  /** POST /api/miniatures/:productCode/images — upload images for a variant */
+  /** POST /api/products/:productCode/images — upload images for a miniature variant or print */
   variantImages: (productCode: string) =>
-    `${BASE_URL}/api/miniatures/${encodeURIComponent(productCode)}/images`,
+    `${BASE_URL}/api/products/${encodeURIComponent(productCode)}/images`,
 } as const;
