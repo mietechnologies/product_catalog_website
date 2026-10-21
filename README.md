@@ -56,7 +56,8 @@ src/
 │   ├── page.tsx            # Catalog page (/)
 │   ├── not-found.tsx       # 404 page
 │   ├── item/[slug]/        # Base-item detail page (/item/:slug)
-│   └── product/[slug]/     # Product detail page (/product/:slug)
+│   ├── product/[slug]/     # Product detail page (/product/:slug)
+│   └── (retail)/           # Retail routes (feature-flagged; thin re-exports of modules/retail)
 │
 ├── components/
 │   ├── ui/                 # Generic UI primitives
@@ -85,7 +86,18 @@ src/
 ├── data/
 │   └── seed.ts             # All product/item seed data
 │
+├── modules/
+│   └── retail/             # Retail feature module (see "Feature Flags")
+│       ├── screens/        # Page bodies for the (retail) routes
+│       ├── components/     # Menu links / login prompt slots used by core UI
+│       ├── api.ts          # Retailer + order API calls
+│       ├── endpoints.ts    # Retail endpoint paths
+│       ├── orderStatus.ts  # Order status helpers
+│       ├── types.ts        # Retailer / order types
+│       └── index.ts        # Public surface for core code
+│
 └── lib/
+    ├── features.ts         # Feature flags
     ├── types.ts            # TypeScript type definitions
     ├── utils.ts            # Utility functions (cn, formatPrice, etc.)
     └── api/
@@ -122,6 +134,31 @@ Add a new entry to the `standaloneProducts` array:
 
 1. Create a variants array (each is a full `Product` with a `parentItemSlug`).
 2. Add a `BaseItem` entry to the `baseItems` array referencing those variants.
+
+---
+
+## Feature Flags
+
+Flags live in `src/lib/features.ts` and are driven by `NEXT_PUBLIC_*` environment variables. They are inlined at build time, so **rebuild after changing one**. A flag is on only when its variable is exactly `true`.
+
+| Flag | Variable | Default | Controls |
+| ---- | -------- | ------- | -------- |
+| `retail` | `NEXT_PUBLIC_FEATURE_RETAIL` | off | Retailer sign-up, ordering, and the retailer/order admin pages |
+
+When `retail` is **off**:
+
+- `/orders`, `/orders/create`, `/orders/:id`, `/retailer/create`, `/admin/retailers/*` and `/admin/orders/*` return 404 (gated once in `src/app/(retail)/layout.tsx`).
+- The slide-menu order/retail links and the "Retailer? Register here" login link are not rendered.
+
+Everything retail-specific lives in `src/modules/retail/` plus the thin route files in `src/app/(retail)/`. Core code touches the module only through the exports in `src/modules/retail/index.ts`.
+
+```bash
+# Local development
+echo "NEXT_PUBLIC_FEATURE_RETAIL=true" >> .env.local
+
+# Docker
+docker build --build-arg NEXT_PUBLIC_FEATURE_RETAIL=true -t mietech-catalog .
+```
 
 ---
 

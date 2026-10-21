@@ -9,6 +9,7 @@ import Button from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { loginAdmin } from "@/lib/auth/api";
+import { RetailerSignupPrompt } from "@/modules/retail";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -104,15 +105,7 @@ export default function LoginPage() {
         </form>
 
         <div className="mt-6 text-center text-sm text-neutral space-y-2">
-          <p>
-            Retailer?{" "}
-            <Link
-              href="/retailer/create"
-              className="font-medium text-primary hover:text-primary-light transition-colors"
-            >
-              Register here
-            </Link>
-          </p>
+          <RetailerSignupPrompt />
           <p>
             Admin?{" "}
             <Link
