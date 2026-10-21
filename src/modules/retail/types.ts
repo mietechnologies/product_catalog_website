@@ -14,7 +14,7 @@ export interface PendingRetailer {
 
 /** A line item within an order */
 export interface OrderLineItem {
-  miniatureId: string;
+  productId: string;
   productCode: string;
   quantity: number;
   unitCost: number;

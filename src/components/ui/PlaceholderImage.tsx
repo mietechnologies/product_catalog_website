@@ -1,10 +1,12 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import type { CreatureType } from "@/lib/types";
+import type { CreatureType, PrintCategory } from "@/lib/types";
 
-/** SVG icon paths for each creature type */
-const creatureIcons: Record<CreatureType, string> = {
+type PlaceholderCategory = CreatureType | PrintCategory;
+
+/** SVG icon paths for each creature type and print category */
+const categoryIcons: Record<PlaceholderCategory, string> = {
   Dragon:
     "M12 2C8 2 4 6 4 10c0 2 1 4 3 5l-1 5h2l1-3 3 3 3-3 1 3h2l-1-5c2-1 3-3 3-5 0-4-4-8-8-8zm-2 8a1 1 0 110-2 1 1 0 010 2zm4 0a1 1 0 110-2 1 1 0 010 2z",
   Undead:
@@ -33,9 +35,20 @@ const creatureIcons: Record<CreatureType, string> = {
     "M12 4c-4 0-7 2-8 5-.5 1.5 0 3 1 4 .5 2 2 3.5 3.5 4.5 1 .5 2.2.5 3.5.5s2.5 0 3.5-.5c1.5-1 3-2.5 3.5-4.5 1-1 1.5-2.5 1-4-1-3-4-5-8-5z",
   Plant:
     "M12 2c-1 0-2 .5-2 1.5v3C8 7 6 8.5 6 11c0 1.5.5 3 1.5 4-.5 1.5-.5 3.5 0 5h9c.5-1.5.5-3.5 0-5 1-1 1.5-2.5 1.5-4 0-2.5-2-4-4-4.5v-3C14 2.5 13 2 12 2z",
+  // Print categories
+  Decor:
+    "M12 3c-.6 0-1 .4-1 1v1.1C7 5.6 4 8.6 4 12.5 4 17 7.6 21 12 21s8-4 8-8.5c0-3.9-3-6.9-7-7.4V4c0-.6-.4-1-1-1zm-3 8l1.5 2h-3L9 11zm6 0l1.5 2h-3L15 11zm-6 5h6l-1 1.5h-4L9 16z",
+  Toy:
+    "M12 3l-2 3H6l1 4-3 2 3 2-1 4h4l2 3 2-3h4l-1-4 3-2-3-2 1-4h-4l-2-3zm0 6a3 3 0 110 6 3 3 0 010-6z",
+  Figurine:
+    "M12 2a3 3 0 100 6 3 3 0 000-6zm-3 7c-1 0-2 1-2 2v4h2v4H7v3h10v-3h-2v-4h2v-4c0-1-1-2-2-2H9z",
+  Accessory:
+    "M4 7l8-4 8 4v10l-8 4-8-4V7zm8-1.8L6.5 8 12 10.8 17.5 8 12 5.2z",
+  Other:
+    "M4 7l8-4 8 4v10l-8 4-8-4V7zm2 1.6v7.2l5 2.5v-7.2l-5-2.5zm12 0l-5 2.5v7.2l5-2.5V8.6z",
 };
 
-const bgColors: Record<CreatureType, string> = {
+const bgColors: Record<PlaceholderCategory, string> = {
   Dragon: "bg-red-50",
   Undead: "bg-green-50",
   Beast: "bg-amber-50",
@@ -50,9 +63,14 @@ const bgColors: Record<CreatureType, string> = {
   Monstrosity: "bg-red-50",
   Ooze: "bg-lime-50",
   Plant: "bg-green-50",
+  Decor: "bg-orange-50",
+  Toy: "bg-sky-50",
+  Figurine: "bg-violet-50",
+  Accessory: "bg-slate-100",
+  Other: "bg-gray-50",
 };
 
-const iconColors: Record<CreatureType, string> = {
+const iconColors: Record<PlaceholderCategory, string> = {
   Dragon: "text-red-400",
   Undead: "text-green-500",
   Beast: "text-amber-500",
@@ -67,28 +85,35 @@ const iconColors: Record<CreatureType, string> = {
   Monstrosity: "text-red-500",
   Ooze: "text-lime-500",
   Plant: "text-green-500",
+  Decor: "text-orange-500",
+  Toy: "text-sky-500",
+  Figurine: "text-violet-500",
+  Accessory: "text-slate-500",
+  Other: "text-gray-400",
 };
 
 interface PlaceholderImageProps {
   name: string;
-  creatureType: CreatureType;
+  /** Creature type for miniatures, print category for prints */
+  category: string;
   className?: string;
   size?: "sm" | "md" | "lg";
 }
 
 export default function PlaceholderImage({
   name,
-  creatureType,
+  category,
   className,
   size = "md",
 }: PlaceholderImageProps) {
   const iconSize = size === "sm" ? 32 : size === "lg" ? 64 : 48;
+  const key = category as PlaceholderCategory;
 
   return (
     <div
       className={cn(
         "flex flex-col items-center justify-center gap-2",
-        bgColors[creatureType] ?? "bg-gray-50",
+        bgColors[key] ?? "bg-gray-50",
         className
       )}
       role="img"
@@ -100,14 +125,14 @@ export default function PlaceholderImage({
         height={iconSize}
         viewBox="0 0 24 24"
         fill="currentColor"
-        className={cn(iconColors[creatureType] ?? "text-gray-400", "opacity-60")}
+        className={cn(iconColors[key] ?? "text-gray-400", "opacity-60")}
         aria-hidden="true"
       >
-        <path d={creatureIcons[creatureType] ?? creatureIcons.Beast} />
+        <path d={categoryIcons[key] ?? categoryIcons.Other} />
       </svg>
       {size !== "sm" && (
-        <span className={cn("text-xs font-medium opacity-50", iconColors[creatureType] ?? "text-gray-400")}>
-          {creatureType}
+        <span className={cn("text-xs font-medium opacity-50", iconColors[key] ?? "text-gray-400")}>
+          {category}
         </span>
       )}
     </div>

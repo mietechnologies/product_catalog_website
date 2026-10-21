@@ -16,7 +16,8 @@ import Select from "@/components/ui/Select";
 interface EditVariantInitial {
   name: string;
   description: string;
-  size: string;
+  /** Miniature variants only; prints have no size */
+  size?: string;
   cost: number;
   wholesale: number;
   msrp: number;
@@ -42,6 +43,7 @@ export default function EditVariantModal({
   const { toast } = useToast();
   const [mounted, setMounted] = useState(false);
   const [saving, setSaving] = useState(false);
+  const isVariant = initial.size !== undefined;
 
   const [name, setName] = useState(initial.name);
   const [description, setDescription] = useState(initial.description);
@@ -112,7 +114,7 @@ export default function EditVariantModal({
     setSaving(false);
 
     if (result.ok) {
-      toast("Variant updated successfully", "success");
+      toast(isVariant ? "Variant updated successfully" : "Product updated successfully", "success");
       onSuccess();
       onClose();
     } else {
@@ -143,7 +145,9 @@ export default function EditVariantModal({
           )}
         >
           <div className="p-6 space-y-5">
-            <h2 className="text-lg font-bold text-gray-900">Edit Variant</h2>
+            <h2 className="text-lg font-bold text-gray-900">
+              {isVariant ? "Edit Variant" : "Edit Details"}
+            </h2>
 
             {/* Name */}
             <div>
@@ -170,16 +174,18 @@ export default function EditVariantModal({
               />
             </div>
 
-            {/* Size */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Size</label>
-              <Select
-                value={size}
-                onChange={(e) => setSize(e.target.value)}
-                options={PRODUCT_SIZES.map((s) => ({ value: s, label: s }))}
-                className="w-full"
-              />
-            </div>
+            {/* Size (miniature variants only) */}
+            {isVariant && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Size</label>
+                <Select
+                  value={size}
+                  onChange={(e) => setSize(e.target.value)}
+                  options={PRODUCT_SIZES.map((s) => ({ value: s, label: s }))}
+                  className="w-full"
+                />
+              </div>
+            )}
 
             {/* Price fields */}
             <div className="grid grid-cols-3 gap-3">

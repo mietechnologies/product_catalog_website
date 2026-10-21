@@ -32,7 +32,7 @@ export default function VariantDetailPanel({ variant, onDataChange }: VariantDet
       <Gallery
         images={variant.images}
         name={variant.name}
-        creatureType={variant.creatureType}
+        category={variant.category}
       />
 
       {/* Admin: Upload Photos */}
@@ -48,8 +48,8 @@ export default function VariantDetailPanel({ variant, onDataChange }: VariantDet
 
       {/* Badges */}
       <div className="flex flex-wrap gap-2">
-        <Badge variant="outline">{variant.size}</Badge>
-        <Badge>{variant.creatureType}</Badge>
+        {variant.size && <Badge variant="outline">{variant.size}</Badge>}
+        <Badge>{variant.category}</Badge>
       </div>
 
       {/* Description */}
