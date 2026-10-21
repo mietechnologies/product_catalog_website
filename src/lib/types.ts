@@ -1,5 +1,8 @@
 /** Core product types for the MIETech catalog */
 
+/** Kinds of product the catalog sells. Matches `productType` on the backend. */
+export type ProductType = "miniature" | "print";
+
 /** Credit for a third-party 3D model. Omitted/null for in-house models. */
 export interface Attribution {
   creator?: string;
@@ -9,13 +12,20 @@ export interface Attribution {
 export interface ProductBase {
   slug: string;
   name: string;
-  productCode: string; // Format: M-[XX]-[0000]
+  productCode: string; // Format: [M|P]-[XX]-[0000]
+  productType: ProductType;
+  /** Creature type for miniatures, print category (Toy, Decor, ...) for prints */
+  category: string;
+  /** Free-form groupings such as "Halloween" */
+  collections: string[];
   price: number;
   description: string;
   images: string[]; // 1-5 images
   thumbnail?: string | null;
-  size: ProductSize;
-  creatureType: CreatureType;
+  /** Miniatures only */
+  size?: ProductSize;
+  /** Miniatures only */
+  creatureType?: CreatureType;
   attributes: Record<string, string>;
   attribution?: Attribution | null;
 }
@@ -32,8 +42,11 @@ export interface BaseItem {
   productCode?: string; // Base items may not have a product code
   description: string;
   image: string; // Primary display image
-  creatureType: CreatureType;
-  size: ProductSize; // Representative size
+  productType: ProductType;
+  category: string;
+  collections: string[];
+  creatureType?: CreatureType;
+  size?: ProductSize; // Representative size
   hasVariants: boolean;
   variants: Product[];
   priceRange?: { min: number; max: number };
@@ -48,8 +61,11 @@ export interface CatalogEntry {
   image: string;
   price?: number;
   priceRange?: { min: number; max: number };
-  size: ProductSize;
-  creatureType: CreatureType;
+  productType: ProductType;
+  category: string;
+  collections: string[];
+  size?: ProductSize;
+  creatureType?: CreatureType;
   hasVariants: boolean;
   type: "product" | "item"; // Determines navigation: /product/[slug] or /item/[slug]
 }
@@ -76,6 +92,7 @@ export type CreatureType =
   | "Monstrosity"
   | "Ooze"
   | "Plant"
+  | "Terrain"
   | "Undead";
 
 export const CREATURE_TYPES: CreatureType[] = [
@@ -92,8 +109,49 @@ export const CREATURE_TYPES: CreatureType[] = [
   "Monstrosity",
   "Ooze",
   "Plant",
+  "Terrain",
   "Undead",
 ];
+
+export type PrintCategory =
+  | "Cosplay & Props"
+  | "Decor"
+  | "Desk & Office"
+  | "Figurine"
+  | "Gaming Accessories"
+  | "Jewelry"
+  | "Kitchen"
+  | "Lighting"
+  | "Organization"
+  | "Planters & Garden"
+  | "Toy"
+  | "Other";
+
+export const PRINT_CATEGORIES: PrintCategory[] = [
+  "Cosplay & Props",
+  "Decor",
+  "Desk & Office",
+  "Figurine",
+  "Gaming Accessories",
+  "Jewelry",
+  "Kitchen",
+  "Lighting",
+  "Organization",
+  "Planters & Garden",
+  "Toy",
+  "Other",
+];
+
+export const PRODUCT_TYPES: { value: ProductType; label: string }[] = [
+  { value: "miniature", label: "Miniatures" },
+  { value: "print", label: "Prints" },
+];
+
+/** Categories offered for each product type */
+export const CATEGORIES_BY_TYPE: Record<ProductType, readonly string[]> = {
+  miniature: CREATURE_TYPES,
+  print: PRINT_CATEGORIES,
+};
 
 export const PRODUCT_SIZES: ProductSize[] = [
   "Tiny",
@@ -108,7 +166,9 @@ export type SortOption = "name-asc" | "price-low" | "price-high";
 
 export interface CatalogFilters {
   query?: string;
-  creatureType?: CreatureType;
+  productType?: ProductType;
+  category?: string;
+  collection?: string;
   size?: ProductSize;
   hasVariants?: boolean;
   priceMin?: number;
@@ -134,6 +194,7 @@ export interface UpdateVariantPayload {
   name?: string;
   description?: string;
   size?: string;
+  collections?: string[];
   /** Applies to the parent miniature (all variants). null removes it. */
   attribution?: Attribution | null;
   price?: {
@@ -159,8 +220,24 @@ export interface CreateMiniaturePayload {
   baseName: string;
   description?: string;
   category: string;
+  collections?: string[];
   attribution?: Attribution;
   variants: CreateMiniatureVariant[];
+}
+
+export interface CreatePrintPayload {
+  productType: "print";
+  name: string;
+  description?: string;
+  category: string;
+  fileName: string;
+  collections?: string[];
+  attribution?: Attribution;
+  price?: {
+    cost?: number;
+    wholesale?: number;
+    msrp?: number;
+  };
 }
 
 /** API response wrappers */
@@ -184,13 +261,17 @@ export interface CatalogResponse {
 
 // ── Backend API response shapes ──────────────────────────────────────
 
-/** Shape of a single item returned by GET /api/miniatures and GET /api/miniatures/:productCode */
-export interface BackendMiniatureItem {
+/** Shape of a single item returned by GET /api/products and GET /api/products/:productCode */
+export interface BackendProductItem {
   productCode: string;
-  name: string; // "BaseName, VariantName"
+  productType: ProductType;
+  baseName?: string;
+  name: string; // "BaseName, VariantName" for miniature variants, the product name for prints
   description?: string;
-  size: string;
+  variantDescription?: string;
+  size?: string; // miniatures only
   category: string;
+  collections?: string[];
   thumbnail: string | null;
   images: Record<string, string>; // { "0": "url", "1": "url" }
   attribution?: Attribution | null;
@@ -199,10 +280,15 @@ export interface BackendMiniatureItem {
   msrp: number;
 }
 
-/** Shape of GET /api/miniatures response */
+/** Shape of GET /api/products response */
 export interface BackendCatalogResponse {
   page: number;
   totalPages: number;
   totalItems: number;
-  items: BackendMiniatureItem[];
+  items: BackendProductItem[];
+}
+
+/** Shape of GET /api/products/meta (frontend keeps only what it needs) */
+export interface ProductMeta {
+  collections: string[];
 }

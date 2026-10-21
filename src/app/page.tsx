@@ -6,10 +6,12 @@ import { Suspense } from "react";
 import SearchBar from "@/components/catalog/SearchBar";
 import FiltersBar from "@/components/catalog/FiltersBar";
 import ProductGrid from "@/components/catalog/ProductGrid";
+import ProductTypeTabs from "@/components/catalog/ProductTypeTabs";
 import { useToast } from "@/components/ui/Toast";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { fetchCatalog } from "@/lib/api/client";
-import type { CatalogEntry, CatalogFilters, SortOption } from "@/lib/types";
+import { fetchCatalog, fetchProductMeta } from "@/lib/api/client";
+import { PRODUCT_TYPES } from "@/lib/types";
+import type { CatalogEntry, CatalogFilters, ProductType, SortOption } from "@/lib/types";
 
 function CatalogPageInner() {
   const router = useRouter();
@@ -19,9 +21,14 @@ function CatalogPageInner() {
 
   // Derive initial filters from URL
   function filtersFromParams(): CatalogFilters {
+    const tab = searchParams.get("tab");
     return {
       query: searchParams.get("q") ?? undefined,
-      creatureType: (searchParams.get("type") ?? undefined) as CatalogFilters["creatureType"],
+      productType: PRODUCT_TYPES.some((t) => t.value === tab)
+        ? (tab as ProductType)
+        : undefined,
+      category: searchParams.get("category") ?? undefined,
+      collection: searchParams.get("collection") ?? undefined,
       size: (searchParams.get("size") ?? undefined) as CatalogFilters["size"],
       hasVariants:
         searchParams.get("variants") === "true"
@@ -41,6 +48,14 @@ function CatalogPageInner() {
   const [entries, setEntries] = useState<CatalogEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [collections, setCollections] = useState<string[]>([]);
+
+  // Load the collections in use for the collection filter
+  useEffect(() => {
+    fetchProductMeta().then((result) => {
+      if (result.ok) setCollections(result.data.collections);
+    });
+  }, []);
 
   // Track current filters for retry
   const filtersRef = useRef(filters);
@@ -49,7 +64,8 @@ function CatalogPageInner() {
   // Check if any filters are active
   const hasActiveFilters = Boolean(
     filters.query ||
-    filters.creatureType ||
+    filters.category ||
+    filters.collection ||
     filters.size ||
     filters.hasVariants !== undefined ||
     filters.priceMin !== undefined ||
@@ -61,7 +77,9 @@ function CatalogPageInner() {
     (f: CatalogFilters) => {
       const params = new URLSearchParams();
       if (f.query) params.set("q", f.query);
-      if (f.creatureType) params.set("type", f.creatureType);
+      if (f.productType) params.set("tab", f.productType);
+      if (f.category) params.set("category", f.category);
+      if (f.collection) params.set("collection", f.collection);
       if (f.size) params.set("size", f.size);
       if (f.hasVariants) params.set("variants", "true");
       if (f.priceMin !== undefined) params.set("pmin", String(f.priceMin));
@@ -122,8 +140,18 @@ function CatalogPageInner() {
     pushFiltersToUrl(next);
   }
 
+  function changeTab(productType: ProductType | undefined) {
+    // Categories, sizes, and variants differ by type, so reset them with the tab
+    updateFilters({
+      productType,
+      category: undefined,
+      size: undefined,
+      hasVariants: undefined,
+    });
+  }
+
   function clearFilters() {
-    const cleared: CatalogFilters = { sort: filters.sort };
+    const cleared: CatalogFilters = { sort: filters.sort, productType: filters.productType };
     setFilters(cleared);
     pushFiltersToUrl(cleared);
   }
@@ -136,11 +164,14 @@ function CatalogPageInner() {
     <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8 space-y-6">
       {/* Page title */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Miniatures Catalog</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Product Catalog</h1>
         <p className="text-sm text-neutral mt-1">
-          High-quality 3D-printed tabletop miniatures for your next adventure.
+          High-quality 3D prints, from tabletop miniatures to figurines, toys, and decor.
         </p>
       </div>
+
+      {/* Product type tabs */}
+      <ProductTypeTabs value={filters.productType} onChange={changeTab} />
 
       {/* Search */}
       <SearchBar
@@ -150,7 +181,11 @@ function CatalogPageInner() {
       />
 
       {/* Filters */}
-      <FiltersBar filters={filters} onChange={updateFilters} />
+      <FiltersBar
+        filters={filters}
+        onChange={updateFilters}
+        collections={collections}
+      />
 
       {/* Results */}
       <ProductGrid

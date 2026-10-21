@@ -30,7 +30,7 @@ function VariantThumb({ variant }: { variant: Product }) {
   ) : (
     <PlaceholderImage
       name={variant.name}
-      creatureType={variant.creatureType}
+      category={variant.category}
       className="w-full h-full"
       size="sm"
     />

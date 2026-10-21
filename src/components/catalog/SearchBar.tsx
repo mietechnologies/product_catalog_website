@@ -31,7 +31,7 @@ export default function SearchBar({ value, onChange, isLoading }: SearchBarProps
   return (
     <div className="relative w-full max-w-xl">
       <label htmlFor="catalog-search" className="sr-only">
-        Search miniatures
+        Search products
       </label>
       {/* Search icon */}
       <svg
@@ -53,11 +53,11 @@ export default function SearchBar({ value, onChange, isLoading }: SearchBarProps
       <Input
         id="catalog-search"
         type="search"
-        placeholder="Search miniatures by name, code, or creature type..."
+        placeholder="Search by name, code, category, or collection..."
         value={local}
         onChange={handleChange}
         className="pl-10 pr-10"
-        aria-label="Search miniatures"
+        aria-label="Search products"
       />
 
       {/* Loading spinner */}

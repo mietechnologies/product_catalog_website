@@ -47,7 +47,7 @@ export default function ProductCard({ entry }: ProductCardProps) {
           ) : (
             <PlaceholderImage
               name={entry.name}
-              creatureType={entry.creatureType}
+              category={entry.category}
               className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
             />
           )}
@@ -65,7 +65,7 @@ export default function ProductCard({ entry }: ProductCardProps) {
 
           {/* Badges */}
           <div className="flex flex-wrap gap-1.5">
-            <Badge variant="outline">{entry.size}</Badge>
+            <Badge variant="outline">{entry.size ?? entry.category}</Badge>
             {entry.hasVariants && (
               <Badge variant="accent">Has Variants</Badge>
             )}

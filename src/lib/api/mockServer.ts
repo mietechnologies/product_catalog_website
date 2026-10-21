@@ -14,6 +14,7 @@ import type {
   CatalogFilters,
   CatalogResponse,
   Product,
+  ProductMeta,
   SortOption,
 } from "@/lib/types";
 
@@ -40,6 +41,9 @@ function buildCatalogEntries(): CatalogEntry[] {
       productCode: item.productCode,
       image: item.image,
       priceRange: item.priceRange,
+      productType: item.productType,
+      category: item.category,
+      collections: item.collections,
       size: item.size,
       creatureType: item.creatureType,
       hasVariants: true,
@@ -52,8 +56,11 @@ function buildCatalogEntries(): CatalogEntry[] {
       slug: product.slug,
       name: product.name,
       productCode: product.productCode,
-      image: product.images[0],
+      image: product.images[0] ?? "",
       price: product.price,
+      productType: product.productType,
+      category: product.category,
+      collections: product.collections,
       size: product.size,
       creatureType: product.creatureType,
       hasVariants: false,
@@ -73,7 +80,8 @@ function matchesQuery(entry: CatalogEntry, query: string): boolean {
   return (
     entry.name.toLowerCase().includes(q) ||
     (entry.productCode?.toLowerCase().includes(q) ?? false) ||
-    entry.creatureType.toLowerCase().includes(q)
+    entry.category.toLowerCase().includes(q) ||
+    entry.collections.some((c) => c.toLowerCase().includes(q))
   );
 }
 
@@ -113,9 +121,22 @@ export async function getCatalog(
     results = results.filter((e) => matchesQuery(e, filters.query!));
   }
 
-  // Creature type filter
-  if (filters.creatureType) {
-    results = results.filter((e) => e.creatureType === filters.creatureType);
+  // Product type tab
+  if (filters.productType) {
+    results = results.filter((e) => e.productType === filters.productType);
+  }
+
+  // Category filter (creature type or print category)
+  if (filters.category) {
+    results = results.filter((e) => e.category === filters.category);
+  }
+
+  // Collection filter
+  if (filters.collection) {
+    const c = filters.collection.toLowerCase();
+    results = results.filter((e) =>
+      e.collections.some((x) => x.toLowerCase() === c)
+    );
   }
 
   // Size filter
@@ -164,4 +185,10 @@ export async function getProduct(slug: string): Promise<Product | null> {
   }
 
   return null;
+}
+
+export async function getProductMeta(): Promise<ProductMeta> {
+  await delay();
+  const collections = new Set(allEntries.flatMap((e) => e.collections));
+  return { collections: [...collections].sort() };
 }

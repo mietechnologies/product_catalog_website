@@ -1,4 +1,22 @@
-import { BaseItem, Product } from "@/lib/types";
+import { BaseItem, CreatureType, Product } from "@/lib/types";
+
+/** Seed miniatures are written without the generic product fields; asMiniature() fills them in. */
+type MiniatureSeed = Omit<Product, "productType" | "category" | "collections"> & {
+  creatureType: CreatureType;
+};
+type MiniatureItemSeed = Omit<BaseItem, "productType" | "category" | "collections" | "variants"> & {
+  creatureType: CreatureType;
+  variants: Product[];
+};
+
+function asMiniature<T extends { creatureType: CreatureType }>(seed: T) {
+  return {
+    ...seed,
+    productType: "miniature" as const,
+    category: seed.creatureType,
+    collections: [] as string[],
+  };
+}
 
 /**
  * Seed data for the MIETech product catalog POC.
@@ -11,7 +29,7 @@ import { BaseItem, Product } from "@/lib/types";
  */
 
 // ── Red Dragon (base item with 4 age-category variants) ─────────────
-const redDragonVariants: Product[] = [
+const redDragonVariants: Product[] = ([
   {
     slug: "red-dragon-wyrmling",
     name: "Red Dragon Wyrmling",
@@ -93,10 +111,10 @@ const redDragonVariants: Product[] = [
     },
     parentItemSlug: "red-dragon",
   },
-];
+] satisfies MiniatureSeed[] as MiniatureSeed[]).map(asMiniature);
 
 // ── Zombie (base item with 3 sculpt variants) ───────────────────────
-const zombieVariants: Product[] = [
+const zombieVariants: Product[] = ([
   {
     slug: "zombie-shambler",
     name: "Zombie Shambler",
@@ -151,10 +169,10 @@ const zombieVariants: Product[] = [
     },
     parentItemSlug: "zombie",
   },
-];
+] satisfies MiniatureSeed[] as MiniatureSeed[]).map(asMiniature);
 
 // ── Base Items ───────────────────────────────────────────────────────
-export const baseItems: BaseItem[] = [
+export const baseItems: BaseItem[] = ([
   {
     slug: "red-dragon",
     name: "Red Dragon",
@@ -183,10 +201,10 @@ export const baseItems: BaseItem[] = [
     variants: zombieVariants,
     priceRange: { min: 5.99, max: 7.99 },
   },
-];
+] satisfies MiniatureItemSeed[] as MiniatureItemSeed[]).map(asMiniature);
 
 // ── Standalone Products (no variants) ────────────────────────────────
-export const standaloneProducts: Product[] = [
+const standaloneMiniatures: Product[] = ([
   {
     slug: "owlbear",
     name: "Owlbear",
@@ -361,4 +379,61 @@ export const standaloneProducts: Product[] = [
       "Translucent Ready": "Yes",
     },
   },
+] satisfies MiniatureSeed[] as MiniatureSeed[]).map(asMiniature);
+
+// ── Prints (figurines, toys, decor — no variants) ────────────────────
+const prints: Product[] = [
+  {
+    slug: "P-DE-0001",
+    name: "Grinning Jack-o'-Lantern",
+    productCode: "P-DE-0001",
+    productType: "print",
+    category: "Decor",
+    collections: ["Halloween", "Trunk or Treat"],
+    price: 6.99,
+    description:
+      "A classic carved pumpkin with a hollow core sized for a battery tealight. Prints without supports and looks great in orange PLA.",
+    images: [],
+    attributes: {
+      Category: "Decor",
+      Height: "90mm",
+      Material: "PLA",
+    },
+  },
+  {
+    slug: "P-TY-0001",
+    name: "Articulated Bat",
+    productCode: "P-TY-0001",
+    productType: "print",
+    category: "Toy",
+    collections: ["Halloween", "Trunk or Treat"],
+    price: 4.99,
+    description:
+      "A print-in-place bat with flapping, jointed wings. A quick print and a crowd favourite with kids.",
+    images: [],
+    attributes: {
+      Category: "Toy",
+      Wingspan: "120mm",
+      Material: "PLA",
+    },
+  },
+  {
+    slug: "P-FG-0001",
+    name: "Skeleton Cat Figurine",
+    productCode: "P-FG-0001",
+    productType: "print",
+    category: "Figurine",
+    collections: ["Halloween"],
+    price: 8.99,
+    description:
+      "A sitting cat skeleton with a curled tail, perfect for a shelf or a spooky table display.",
+    images: [],
+    attributes: {
+      Category: "Figurine",
+      Height: "75mm",
+      Material: "PLA",
+    },
+  },
 ];
+
+export const standaloneProducts: Product[] = [...standaloneMiniatures, ...prints];
