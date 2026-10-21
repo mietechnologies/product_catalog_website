@@ -92,6 +92,7 @@ export type CreatureType =
   | "Monstrosity"
   | "Ooze"
   | "Plant"
+  | "Terrain"
   | "Undead";
 
 export const CREATURE_TYPES: CreatureType[] = [
@@ -108,15 +109,35 @@ export const CREATURE_TYPES: CreatureType[] = [
   "Monstrosity",
   "Ooze",
   "Plant",
+  "Terrain",
   "Undead",
 ];
 
-export type PrintCategory = "Accessory" | "Decor" | "Figurine" | "Toy" | "Other";
+export type PrintCategory =
+  | "Cosplay & Props"
+  | "Decor"
+  | "Desk & Office"
+  | "Figurine"
+  | "Gaming Accessories"
+  | "Jewelry"
+  | "Kitchen"
+  | "Lighting"
+  | "Organization"
+  | "Planters & Garden"
+  | "Toy"
+  | "Other";
 
 export const PRINT_CATEGORIES: PrintCategory[] = [
-  "Accessory",
+  "Cosplay & Props",
   "Decor",
+  "Desk & Office",
   "Figurine",
+  "Gaming Accessories",
+  "Jewelry",
+  "Kitchen",
+  "Lighting",
+  "Organization",
+  "Planters & Garden",
   "Toy",
   "Other",
 ];
