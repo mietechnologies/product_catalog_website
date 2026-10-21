@@ -2,7 +2,7 @@
 
 import Select from "@/components/ui/Select";
 import { cn } from "@/lib/utils";
-import { CREATURE_TYPES, PRODUCT_SIZES } from "@/lib/types";
+import { CATEGORIES_BY_TYPE, PRODUCT_SIZES } from "@/lib/types";
 import type { CatalogFilters, SortOption } from "@/lib/types";
 
 const PRICE_PRESETS = [
@@ -15,9 +15,14 @@ const PRICE_PRESETS = [
 interface FiltersBarProps {
   filters: CatalogFilters;
   onChange: (filters: Partial<CatalogFilters>) => void;
+  /** Collections in use, for the collection filter */
+  collections?: string[];
 }
 
-export default function FiltersBar({ filters, onChange }: FiltersBarProps) {
+export default function FiltersBar({ filters, onChange, collections = [] }: FiltersBarProps) {
+  const { productType } = filters;
+  // Size and variants only apply to miniatures
+  const showMiniatureFilters = productType !== "print";
   const activePricePreset = PRICE_PRESETS.findIndex(
     (p) =>
       p.min === filters.priceMin &&
@@ -38,49 +43,61 @@ export default function FiltersBar({ filters, onChange }: FiltersBarProps) {
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-3">
-        {/* Creature type */}
-        <Select
-          aria-label="Filter by creature type"
-          placeholder="All Creature Types"
-          value={filters.creatureType ?? ""}
-          onChange={(e) =>
-            onChange({
-              creatureType: (e.target.value || undefined) as CatalogFilters["creatureType"],
-            })
-          }
-          options={CREATURE_TYPES.map((t) => ({ value: t, label: t }))}
-        />
+        {/* Category: creature type for miniatures, print category for prints */}
+        {productType && (
+          <Select
+            aria-label={productType === "miniature" ? "Filter by creature type" : "Filter by category"}
+            placeholder={productType === "miniature" ? "All Creature Types" : "All Categories"}
+            value={filters.category ?? ""}
+            onChange={(e) => onChange({ category: e.target.value || undefined })}
+            options={CATEGORIES_BY_TYPE[productType].map((t) => ({ value: t, label: t }))}
+          />
+        )}
+
+        {/* Collection */}
+        {collections.length > 0 && (
+          <Select
+            aria-label="Filter by collection"
+            placeholder="All Collections"
+            value={filters.collection ?? ""}
+            onChange={(e) => onChange({ collection: e.target.value || undefined })}
+            options={collections.map((c) => ({ value: c, label: c }))}
+          />
+        )}
 
         {/* Size */}
-        <Select
-          aria-label="Filter by size"
-          placeholder="All Sizes"
-          value={filters.size ?? ""}
-          onChange={(e) =>
-            onChange({
-              size: (e.target.value || undefined) as CatalogFilters["size"],
-            })
-          }
-          options={PRODUCT_SIZES.map((s) => ({ value: s, label: s }))}
-        />
+        {showMiniatureFilters && (
+          <Select
+            aria-label="Filter by size"
+            placeholder="All Sizes"
+            value={filters.size ?? ""}
+            onChange={(e) =>
+              onChange({
+                size: (e.target.value || undefined) as CatalogFilters["size"],
+              })
+            }
+            options={PRODUCT_SIZES.map((s) => ({ value: s, label: s }))}
+          />
+        )}
 
         {/* Has Variants toggle */}
-        <button
-          type="button"
-          role="switch"
-          aria-checked={filters.hasVariants === true}
-          aria-label="Show only items with variants"
-          onClick={() =>
-            onChange({
-              hasVariants:
-                filters.hasVariants === true ? undefined : true,
-            })
-          }
-          className={cn(
-            "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors",
-            filters.hasVariants === true
-              ? "border-accent bg-accent/10 text-accent-dark"
-              : "border-neutral/30 bg-white text-neutral-dark hover:border-neutral"
+        {showMiniatureFilters && (
+          <button
+            type="button"
+            role="switch"
+            aria-checked={filters.hasVariants === true}
+            aria-label="Show only items with variants"
+            onClick={() =>
+              onChange({
+                hasVariants:
+                  filters.hasVariants === true ? undefined : true,
+              })
+            }
+            className={cn(
+              "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors",
+              filters.hasVariants === true
+                ? "border-accent bg-accent/10 text-accent-dark"
+                : "border-neutral/30 bg-white text-neutral-dark hover:border-neutral"
           )}
         >
           <span
@@ -91,6 +108,7 @@ export default function FiltersBar({ filters, onChange }: FiltersBarProps) {
           />
           Has Variants
         </button>
+        )}
 
         {/* Sort */}
         <div className="ml-auto">
