@@ -6,10 +6,10 @@ import Link from "next/link";
 import Card from "@/components/ui/Card";
 import { useToast } from "@/components/ui/Toast";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { fetchUnfulfilledOrders } from "@/lib/auth/api";
-import type { Order } from "@/lib/auth/types";
+import { fetchUnfulfilledOrders } from "../api";
+import type { Order } from "../types";
 
-export default function PendingOrdersPage() {
+export default function PendingOrdersScreen() {
   const router = useRouter();
   const { toast } = useToast();
   const { auth, ready } = useAuth();

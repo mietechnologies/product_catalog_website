@@ -24,6 +24,8 @@ Open [http://localhost:8000](http://localhost:8000) in your browser.
 
 > Without `NEXT_PUBLIC_API_URL` set, the app falls back to built-in mock data.
 
+> Retail features (retailer sign-up, ordering, order/retailer admin) are **off by default**. Set `NEXT_PUBLIC_FEATURE_RETAIL=true` in `.env.local` to enable them — see [Feature Flags](#feature-flags).
+
 ### Other scripts
 
 | Command         | Description                          |
@@ -41,6 +43,9 @@ docker build -t mietech-catalog .
 
 # Run the container
 docker run -p 8000:8000 mietech-catalog
+
+# Build with the retail module enabled (flags are baked in at build time)
+docker build --build-arg NEXT_PUBLIC_FEATURE_RETAIL=true -t mietech-catalog .
 ```
 
 Open [http://localhost:8000](http://localhost:8000). The image uses a multi-stage build (~120 MB) with Next.js standalone output.
@@ -56,7 +61,8 @@ src/
 │   ├── page.tsx            # Catalog page (/)
 │   ├── not-found.tsx       # 404 page
 │   ├── item/[slug]/        # Base-item detail page (/item/:slug)
-│   └── product/[slug]/     # Product detail page (/product/:slug)
+│   ├── product/[slug]/     # Product detail page (/product/:slug)
+│   └── (retail)/           # Retail routes (feature-flagged; thin re-exports of modules/retail)
 │
 ├── components/
 │   ├── ui/                 # Generic UI primitives
@@ -85,7 +91,18 @@ src/
 ├── data/
 │   └── seed.ts             # All product/item seed data
 │
+├── modules/
+│   └── retail/             # Retail feature module (see "Feature Flags")
+│       ├── screens/        # Page bodies for the (retail) routes
+│       ├── components/     # Menu links / login prompt slots used by core UI
+│       ├── api.ts          # Retailer + order API calls
+│       ├── endpoints.ts    # Retail endpoint paths
+│       ├── orderStatus.ts  # Order status helpers
+│       ├── types.ts        # Retailer / order types
+│       └── index.ts        # Public surface for core code
+│
 └── lib/
+    ├── features.ts         # Feature flags
     ├── types.ts            # TypeScript type definitions
     ├── utils.ts            # Utility functions (cn, formatPrice, etc.)
     └── api/
@@ -122,6 +139,58 @@ Add a new entry to the `standaloneProducts` array:
 
 1. Create a variants array (each is a full `Product` with a `parentItemSlug`).
 2. Add a `BaseItem` entry to the `baseItems` array referencing those variants.
+
+---
+
+## Feature Flags
+
+Feature flags let parts of the app be shipped dark and switched on per environment. They are defined in **`src/lib/features.ts`** and driven by `NEXT_PUBLIC_*` environment variables.
+
+| Flag     | Variable                      | Default | Controls                                                       |
+| -------- | ----------------------------- | ------- | -------------------------------------------------------------- |
+| `retail` | `NEXT_PUBLIC_FEATURE_RETAIL`  | **off** | Retailer sign-up, ordering, and the retailer/order admin pages |
+
+### How flags are resolved
+
+- A flag is **on only when its variable is exactly `true`**. Unset, empty, `false`, `1`, etc. all mean off.
+- Values are **inlined at build time**, not read at runtime. Restart `npm run dev` or rebuild (`npm run build`, `docker build`) after changing one.
+
+### Enabling the retail module
+
+```bash
+# Local development — add to .env.local, then restart `npm run dev`
+NEXT_PUBLIC_FEATURE_RETAIL=true
+
+# Production build
+NEXT_PUBLIC_FEATURE_RETAIL=true npm run build
+
+# Docker (the Dockerfile exposes it as a build arg, default false)
+docker build --build-arg NEXT_PUBLIC_FEATURE_RETAIL=true -t mietech-catalog .
+```
+
+### What the `retail` flag controls
+
+| | Flag **on** | Flag **off** |
+| --- | --- | --- |
+| Retailer routes: `/retailer/create` | Available | 404 |
+| Order routes: `/orders`, `/orders/create`, `/orders/:id` | Available | 404 |
+| Admin routes: `/admin/retailers/pending`, `/admin/retailers/approved`, `/admin/orders/pending`, `/admin/orders/:id` | Available | 404 |
+| Slide menu: Create Order, My Orders, Retail Portal, Pending Orders | Shown | Hidden |
+| Login page: "Retailer? Register here" link | Shown | Hidden |
+
+Everything else is unaffected, including catalog browsing, login, profile, and admin tools for adding/editing miniatures (`/admin/create`, `/admin/miniatures/add`). Wholesale price fields in the admin variant forms are product pricing data and are not gated.
+
+### How it is organized
+
+- **`src/modules/retail/`** — all retail code: screens, retailer/order API calls and endpoints, types, order-status helpers, and the menu/login components. Core code imports it only through `src/modules/retail/index.ts`.
+- **`src/app/(retail)/`** — thin route files that re-export the screens. This is a route group, so URLs are unchanged. Its `layout.tsx` is the single gate that returns 404 when the flag is off.
+- The menu and login components exported by the module check the flag themselves and render nothing when it is off, so core files contain no flag logic.
+
+### Adding another flag
+
+1. Add an entry to `features` in `src/lib/features.ts` (`process.env.NEXT_PUBLIC_FEATURE_<NAME> === "true"` — the full literal `process.env.NEXT_PUBLIC_…` access is required for Next.js to inline it).
+2. Document it in `.env.example` and in the table above.
+3. For a Dockerized build, add a matching `ARG`/`ENV` pair in the `Dockerfile`.
 
 ---
 

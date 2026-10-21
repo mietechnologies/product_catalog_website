@@ -7,11 +7,11 @@ import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import { useToast } from "@/components/ui/Toast";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { fetchMyOrderById } from "@/lib/auth/api";
-import type { Order } from "@/lib/auth/types";
-import { getOrderStatus, ORDER_STATUS_BADGE_VARIANT } from "@/lib/auth/orderStatus";
+import { fetchMyOrderById } from "../api";
+import type { Order } from "../types";
+import { getOrderStatus, ORDER_STATUS_BADGE_VARIANT } from "../orderStatus";
 
-export default function MyOrderDetailPage() {
+export default function MyOrderDetailScreen() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { toast } = useToast();

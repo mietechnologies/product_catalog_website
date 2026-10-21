@@ -4,6 +4,10 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth/AuthContext";
+import {
+  RetailAdminMenuLinks,
+  RetailCustomerMenuLinks,
+} from "@/modules/retail";
 import { cn } from "@/lib/utils";
 
 interface SlideMenuProps {
@@ -14,7 +18,6 @@ interface SlideMenuProps {
 export default function SlideMenu({ open, onClose }: SlideMenuProps) {
   const { auth } = useAuth();
   const [mounted, setMounted] = useState(false);
-  const [retailOpen, setRetailOpen] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
@@ -74,21 +77,7 @@ export default function SlideMenu({ open, onClose }: SlideMenuProps) {
             Browse Catalog
           </Link>
 
-          {auth && auth.user.accountType !== "admin" && (
-            <Link
-              href="/orders/create"
-              onClick={onClose}
-              className={linkClass}
-            >
-              Create Order
-            </Link>
-          )}
-
-          {auth && auth.user.accountType === "retailer" && (
-            <Link href="/orders" onClick={onClose} className={linkClass}>
-              My Orders
-            </Link>
-          )}
+          <RetailCustomerMenuLinks onClose={onClose} linkClass={linkClass} />
 
           {auth && auth.user.accountType === "admin" && (
             <>
@@ -99,56 +88,7 @@ export default function SlideMenu({ open, onClose }: SlideMenuProps) {
               >
                 Add Miniature
               </Link>
-              {/* Retail Portal dropdown */}
-              <button
-                onClick={() => setRetailOpen((v) => !v)}
-                className={cn(linkClass, "w-full justify-between")}
-              >
-                Retail Portal
-                <svg
-                  className={cn(
-                    "h-4 w-4 transition-transform",
-                    retailOpen && "rotate-180",
-                  )}
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2}
-                  stroke="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="m19.5 8.25-7.5 7.5-7.5-7.5"
-                  />
-                </svg>
-              </button>
-              {retailOpen && (
-                <div className="ml-3 flex flex-col gap-1">
-                  <Link
-                    href="/admin/retailers/pending"
-                    onClick={onClose}
-                    className={linkClass}
-                  >
-                    Pending Retailers
-                  </Link>
-                  <Link
-                    href="/admin/retailers/approved"
-                    onClick={onClose}
-                    className={linkClass}
-                  >
-                    Approved Retailers
-                  </Link>
-                </div>
-              )}
-              <Link
-                href="/admin/orders/pending"
-                onClick={onClose}
-                className={linkClass}
-              >
-                Pending Orders
-              </Link>
+              <RetailAdminMenuLinks onClose={onClose} linkClass={linkClass} />
             </>
           )}
         </nav>

@@ -7,14 +7,14 @@ import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { createOrder } from "@/lib/auth/api";
+import { createOrder } from "../api";
 
 interface LineItem {
   productCode: string;
   quantity: number;
 }
 
-export default function CreateOrderPage() {
+export default function CreateOrderScreen() {
   const router = useRouter();
   const { toast } = useToast();
   const { auth, ready } = useAuth();
