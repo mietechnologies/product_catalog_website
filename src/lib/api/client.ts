@@ -351,7 +351,7 @@ export async function fetchCatalog(
   }
 
   const hasSearchQuery = Boolean(filters.query?.trim());
-  const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+  const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 
   let result: ApiResult<BackendCatalogResponse>;
 
@@ -398,7 +398,7 @@ export async function fetchItem(
     }
   }
 
-  const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+  const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 
   // Fetch all items and find the group matching this slug
   const result = await fetchJson<BackendCatalogResponse>(
@@ -456,7 +456,7 @@ export async function fetchProduct(
     }
   }
 
-  const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+  const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 
   const result = await fetchJson<BackendMiniatureItem>(
     endpoints.miniature(slug),
