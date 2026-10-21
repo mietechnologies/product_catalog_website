@@ -42,8 +42,24 @@ const categoryIcons: Record<PlaceholderCategory, string> = {
     "M12 3l-2 3H6l1 4-3 2 3 2-1 4h4l2 3 2-3h4l-1-4 3-2-3-2 1-4h-4l-2-3zm0 6a3 3 0 110 6 3 3 0 010-6z",
   Figurine:
     "M12 2a3 3 0 100 6 3 3 0 000-6zm-3 7c-1 0-2 1-2 2v4h2v4H7v3h10v-3h-2v-4h2v-4c0-1-1-2-2-2H9z",
-  Accessory:
-    "M4 7l8-4 8 4v10l-8 4-8-4V7zm8-1.8L6.5 8 12 10.8 17.5 8 12 5.2z",
+  Terrain:
+    "M3 20h18v-2l-3-6-3 3-4-7-5 10H3v2zm6-9l2.5 4.5L9 18H6l3-7z",
+  "Cosplay & Props":
+    "M12 4C7 4 3 6 3 9c0 4 3 9 6 9 1.5 0 2-2 3-2s1.5 2 3 2c3 0 6-5 6-9 0-3-4-5-9-5zm-4 6a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm8 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3z",
+  "Desk & Office":
+    "M3 8h18v2h-1v10h-2V10H6v10H4V10H3V8zm5-4h3v3H8V4zm5 1h3v2h-3V5z",
+  "Gaming Accessories":
+    "M12 2l8.5 5v10L12 22l-8.5-5V7L12 2zm0 4a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm-4 6a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm8 0a1.5 1.5 0 100 3 1.5 1.5 0 000-3z",
+  Jewelry:
+    "M7 3h10l4 5-9 13L3 8l4-5zm1.2 2L6 8h3.5l1-3H8.2zm4.3 0l1 3H18l-2.2-3h-3.3zM6.5 10l4.3 6.3L9.5 10h-3zm5 0l.5 7 2.5-7h-3z",
+  Kitchen:
+    "M7 2v8c0 1.1.9 2 2 2v10h2V12c1.1 0 2-.9 2-2V2h-1.5v6h-1V2h-1v6h-1V2H7zm9 0c-1.7 0-3 2.2-3 5v5h2v10h2V2h-1z",
+  Lighting:
+    "M12 2a7 7 0 00-4 12.7V17c0 .6.4 1 1 1h6c.6 0 1-.4 1-1v-2.3A7 7 0 0012 2zm-3 18h6v1c0 .6-.4 1-1 1h-4c-.6 0-1-.4-1-1v-1z",
+  Organization:
+    "M3 4h18v5H3V4zm1 6h16v10H4V10zm5 2v2h6v-2H9zM5 6v1h14V6H5z",
+  "Planters & Garden":
+    "M12 2c-2 2-3 4-3 6 1 0 2 .3 3 1 1-.7 2-1 3-1 0-2-1-4-3-6zM5 11h14l-2 11H7L5 11z",
   Other:
     "M4 7l8-4 8 4v10l-8 4-8-4V7zm2 1.6v7.2l5 2.5v-7.2l-5-2.5zm12 0l-5 2.5v7.2l5-2.5V8.6z",
 };
@@ -66,7 +82,15 @@ const bgColors: Record<PlaceholderCategory, string> = {
   Decor: "bg-orange-50",
   Toy: "bg-sky-50",
   Figurine: "bg-violet-50",
-  Accessory: "bg-slate-100",
+  Terrain: "bg-stone-100",
+  "Cosplay & Props": "bg-fuchsia-50",
+  "Desk & Office": "bg-zinc-100",
+  "Gaming Accessories": "bg-indigo-50",
+  Jewelry: "bg-pink-50",
+  Kitchen: "bg-amber-50",
+  Lighting: "bg-yellow-50",
+  Organization: "bg-teal-50",
+  "Planters & Garden": "bg-green-50",
   Other: "bg-gray-50",
 };
 
@@ -88,7 +112,15 @@ const iconColors: Record<PlaceholderCategory, string> = {
   Decor: "text-orange-500",
   Toy: "text-sky-500",
   Figurine: "text-violet-500",
-  Accessory: "text-slate-500",
+  Terrain: "text-stone-500",
+  "Cosplay & Props": "text-fuchsia-500",
+  "Desk & Office": "text-zinc-500",
+  "Gaming Accessories": "text-indigo-500",
+  Jewelry: "text-pink-500",
+  Kitchen: "text-amber-600",
+  Lighting: "text-yellow-500",
+  Organization: "text-teal-500",
+  "Planters & Garden": "text-green-600",
   Other: "text-gray-400",
 };
 
