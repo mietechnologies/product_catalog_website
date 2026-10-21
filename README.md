@@ -46,6 +46,8 @@ docker run -p 8000:8000 mietech-catalog
 
 # Build with the retail module enabled (flags are baked in at build time)
 docker build --build-arg NEXT_PUBLIC_FEATURE_RETAIL=true -t mietech-catalog .
+# Note: `docker run -e NEXT_PUBLIC_FEATURE_RETAIL=true` has NO effect — the flag
+# is fixed when the image is built.
 ```
 
 Open [http://localhost:8000](http://localhost:8000). The image uses a multi-stage build (~120 MB) with Next.js standalone output.
@@ -62,7 +64,7 @@ src/
 │   ├── not-found.tsx       # 404 page
 │   ├── item/[slug]/        # Base-item detail page (/item/:slug)
 │   ├── product/[slug]/     # Product detail page (/product/:slug)
-│   └── (retail)/           # Retail routes (feature-flagged; thin re-exports of modules/retail)
+│   └── (retail)/           # Retail routes (feature-flagged; `page.retail.tsx` re-exports of modules/retail)
 │
 ├── components/
 │   ├── ui/                 # Generic UI primitives
@@ -154,6 +156,8 @@ Feature flags let parts of the app be shipped dark and switched on per environme
 
 - A flag is **on only when its variable is exactly `true`**. Unset, empty, `false`, `1`, etc. all mean off.
 - Values are **inlined at build time**, not read at runtime. Restart `npm run dev` or rebuild (`npm run build`, `docker build`) after changing one.
+- Setting the variable on a running server or container (`next start`, `docker run -e …`) **does nothing** — the value was fixed when the app was built. To change a flag, rebuild with the new value.
+- Flags are a **product/UX switch, not access control.** The backend API is unaffected by them and still enforces its own authentication and authorization; a flag only decides what this frontend builds and shows. Retailer accounts can still sign in with the retail flag off.
 
 ### Enabling the retail module
 
@@ -172,7 +176,7 @@ docker build --build-arg NEXT_PUBLIC_FEATURE_RETAIL=true -t mietech-catalog .
 
 | | Flag **on** | Flag **off** |
 | --- | --- | --- |
-| Retailer routes: `/retailer/create` | Available | 404 |
+| Retailer routes: `/retailer/create` | Available | 404 (not built) |
 | Order routes: `/orders`, `/orders/create`, `/orders/:id` | Available | 404 |
 | Admin routes: `/admin/retailers/pending`, `/admin/retailers/approved`, `/admin/orders/pending`, `/admin/orders/:id` | Available | 404 |
 | Slide menu: Create Order, My Orders, Retail Portal, Pending Orders | Shown | Hidden |
@@ -183,8 +187,10 @@ Everything else is unaffected, including catalog browsing, login, profile, and a
 ### How it is organized
 
 - **`src/modules/retail/`** — all retail code: screens, retailer/order API calls and endpoints, types, order-status helpers, and the menu/login components. Core code imports it only through `src/modules/retail/index.ts`.
-- **`src/app/(retail)/`** — thin route files that re-export the screens. This is a route group, so URLs are unchanged. Its `layout.tsx` is the single gate that returns 404 when the flag is off.
+- **`src/app/(retail)/`** — thin route files that re-export the screens. This is a route group, so URLs are unchanged. The route files are named **`page.retail.tsx`**, and `next.config.ts` only registers the `retail.tsx` page extension when the flag is on. With the flag off these routes do not exist, so the screens and their API calls are not compiled into the build at all and the paths return 404. `layout.tsx` is a second line of defense that 404s if a retail route ever ends up built with the flag off.
 - The menu and login components exported by the module check the flag themselves and render nothing when it is off, so core files contain no flag logic.
+
+> **New retail routes** must be named `page.retail.tsx` (not `page.tsx`) so they are excluded from the build when the flag is off.
 
 ### Adding another flag
 
