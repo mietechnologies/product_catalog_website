@@ -180,7 +180,8 @@ export async function getProduct(slug: string): Promise<Product | null> {
   // Check variants across all base items
   for (const item of baseItems) {
     const variant = item.variants.find((v) => v.slug === slug);
-    if (variant) return variant;
+    // Variants inherit the base item's attribution, matching the live API
+    if (variant) return { ...variant, attribution: variant.attribution ?? item.attribution };
   }
 
   return null;

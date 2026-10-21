@@ -137,6 +137,7 @@ function backendToProduct(
         ? { Wholesale: `$${item.wholesale.toFixed(2)}` }
         : {}),
     },
+    attribution: item.attribution ?? null,
     parentItemSlug,
   };
 }
@@ -469,6 +470,7 @@ export async function fetchItem(
         ...typeFields(representative),
         hasVariants: variants.length > 1,
         variants: variants.map((v) => backendToProduct(v, itemSlug)),
+        attribution: representative.attribution ?? null,
         priceRange:
           prices.length > 0
             ? { min: Math.min(...prices), max: Math.max(...prices) }
