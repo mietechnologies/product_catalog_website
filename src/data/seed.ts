@@ -166,6 +166,10 @@ export const baseItems: BaseItem[] = [
     hasVariants: true,
     variants: redDragonVariants,
     priceRange: { min: 8.99, max: 54.99 },
+    attribution: {
+      creator: "Example Sculpts",
+      modelUrl: "https://www.example.com/models/red-dragon",
+    },
   },
   {
     slug: "zombie",

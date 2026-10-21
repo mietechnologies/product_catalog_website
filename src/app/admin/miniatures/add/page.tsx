@@ -9,6 +9,7 @@ import Button from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { createMiniature, uploadVariantImages } from "@/lib/api/client";
+import { isHttpUrl } from "@/lib/utils";
 import {
   CREATURE_TYPES,
   PRODUCT_SIZES,
@@ -50,6 +51,8 @@ export default function AddMiniaturePage() {
   const [baseName, setBaseName] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
+  const [creator, setCreator] = useState("");
+  const [modelUrl, setModelUrl] = useState("");
   const [variants, setVariants] = useState<VariantForm[]>([emptyVariant()]);
   const [loading, setLoading] = useState(false);
   const [loadingText, setLoadingText] = useState("Creating…");
@@ -69,9 +72,12 @@ export default function AddMiniaturePage() {
     );
   }
 
+  const modelUrlInvalid = modelUrl.trim() !== "" && !isHttpUrl(modelUrl.trim());
+
   const canSubmit =
     baseName.trim() !== "" &&
     category !== "" &&
+    !modelUrlInvalid &&
     variants.every(
       (v) => v.name.trim() !== "" && v.size !== "" && v.fileName.trim() !== "",
     );
@@ -106,6 +112,12 @@ export default function AddMiniaturePage() {
       baseName: baseName.trim(),
       ...(description.trim() && { description: description.trim() }),
       category,
+      ...((creator.trim() || modelUrl.trim()) && {
+        attribution: {
+          ...(creator.trim() && { creator: creator.trim() }),
+          ...(modelUrl.trim() && { modelUrl: modelUrl.trim() }),
+        },
+      }),
       variants: variants.map((v) => {
         const price: Record<string, number> = {};
         if (v.cost) price.cost = parseFloat(v.cost);
@@ -227,6 +239,57 @@ export default function AddMiniaturePage() {
                 onChange={(e) => setCategory(e.target.value)}
                 required
               />
+            </div>
+          </div>
+        </Card>
+
+        {/* ── Attribution ───────────────────────────────────── */}
+        <Card className="p-6">
+          <h2 className="text-lg font-semibold text-neutral-dark">
+            Attribution{" "}
+            <span className="text-sm font-normal text-neutral">(optional)</span>
+          </h2>
+          <p className="text-sm text-neutral mt-1 mb-4">
+            Credit the creator of a third-party 3D model. Leave blank for
+            in-house models.
+          </p>
+
+          <div className="space-y-4">
+            <div>
+              <label
+                htmlFor="attributionCreator"
+                className="block text-sm font-medium text-neutral-dark mb-1"
+              >
+                Creator
+              </label>
+              <Input
+                id="attributionCreator"
+                value={creator}
+                onChange={(e) => setCreator(e.target.value)}
+                placeholder="e.g. Jane Sculptor"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="attributionModelUrl"
+                className="block text-sm font-medium text-neutral-dark mb-1"
+              >
+                Model URL
+              </label>
+              <Input
+                id="attributionModelUrl"
+                type="url"
+                value={modelUrl}
+                onChange={(e) => setModelUrl(e.target.value)}
+                placeholder="https://…"
+                aria-invalid={modelUrlInvalid}
+              />
+              {modelUrlInvalid && (
+                <p className="mt-1 text-xs text-red-600">
+                  Model URL must start with http:// or https://
+                </p>
+              )}
             </div>
           </div>
         </Card>

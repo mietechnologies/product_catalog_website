@@ -5,6 +5,7 @@ import { useParams, notFound } from "next/navigation";
 import Breadcrumbs from "@/components/product/Breadcrumbs";
 import Gallery from "@/components/product/Gallery";
 import PriceBlock from "@/components/product/PriceBlock";
+import AttributionCredit from "@/components/product/AttributionCredit";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Skeleton from "@/components/ui/Skeleton";
@@ -136,6 +137,7 @@ export default function ProductPage() {
             <p className="text-sm text-neutral font-mono mt-1">
               {product.productCode}
             </p>
+            <AttributionCredit attribution={product.attribution} className="mt-2" />
           </div>
 
           {/* Badges */}
@@ -226,6 +228,7 @@ export default function ProductPage() {
             cost: costNum,
             wholesale: wholesaleNum,
             msrp: product.price,
+            attribution: product.attribution,
           }}
           onSuccess={loadProduct}
         />

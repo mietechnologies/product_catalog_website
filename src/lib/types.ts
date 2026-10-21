@@ -1,5 +1,11 @@
 /** Core product types for the MIETech catalog */
 
+/** Credit for a third-party 3D model. Omitted/null for in-house models. */
+export interface Attribution {
+  creator?: string;
+  modelUrl?: string;
+}
+
 export interface ProductBase {
   slug: string;
   name: string;
@@ -11,6 +17,7 @@ export interface ProductBase {
   size: ProductSize;
   creatureType: CreatureType;
   attributes: Record<string, string>;
+  attribution?: Attribution | null;
 }
 
 /** A standalone product OR a variant of a base item */
@@ -30,6 +37,7 @@ export interface BaseItem {
   hasVariants: boolean;
   variants: Product[];
   priceRange?: { min: number; max: number };
+  attribution?: Attribution | null;
 }
 
 /** Catalog listing card — flattened for grid display */
@@ -126,6 +134,8 @@ export interface UpdateVariantPayload {
   name?: string;
   description?: string;
   size?: string;
+  /** Applies to the parent miniature (all variants). null removes it. */
+  attribution?: Attribution | null;
   price?: {
     cost?: number;
     wholesale?: number;
@@ -149,6 +159,7 @@ export interface CreateMiniaturePayload {
   baseName: string;
   description?: string;
   category: string;
+  attribution?: Attribution;
   variants: CreateMiniatureVariant[];
 }
 
@@ -182,6 +193,7 @@ export interface BackendMiniatureItem {
   category: string;
   thumbnail: string | null;
   images: Record<string, string>; // { "0": "url", "1": "url" }
+  attribution?: Attribution | null;
   cost: number;
   wholesale: number;
   msrp: number;
