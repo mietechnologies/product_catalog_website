@@ -1,0 +1,60 @@
+name: Catalog CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  catalog-typecheck:
+    name: catalog typecheck
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check (retail off)
+        run: npx tsc --noEmit
+
+      - name: Type-check (retail on)
+        run: npx tsc --noEmit
+        env:
+          NEXT_PUBLIC_FEATURE_RETAIL: "true"
+
+  catalog-production-build:
+    name: catalog production build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: https://api.mietechnologies.com
+          NEXT_PUBLIC_MAIN_SITE_URL: https://mietechnologies.com
