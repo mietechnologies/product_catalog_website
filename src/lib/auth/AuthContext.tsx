@@ -8,20 +8,19 @@ import {
   useState,
 } from "react";
 import type { AuthState, AuthUser } from "./types";
+import { fetchMe, logout } from "./api";
+import { BASE_URL } from "@/lib/api/endpoints";
 
 // ── Types ────────────────────────────────────────────────────────────
 
 interface AuthContextValue {
   auth: AuthState | null;
   ready: boolean;
-  signIn: (user: AuthUser, token: string) => void;
-  signOut: () => void;
-  updateUser: (user: AuthUser, token?: string) => void;
+  signIn: (user: AuthUser) => void;
+  signOut: () => Promise<void>;
 }
 
 // ── Context ──────────────────────────────────────────────────────────
-
-const STORAGE_KEY = "mietech-auth";
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
@@ -37,41 +36,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [auth, setAuth] = useState<AuthState | null>(null);
   const [ready, setReady] = useState(false);
 
-  // Hydrate from localStorage on mount
+  // Ask the backend who is signed in. The session cookie is shared with the
+  // main MieTech site, so a sign-in there shows up here too.
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        setAuth(JSON.parse(stored) as AuthState);
-      }
-    } catch {
-      // Ignore corrupt data
+    if (!BASE_URL) {
+      setReady(true);
+      return;
     }
-    setReady(true);
-  }, []);
-
-  const signIn = useCallback((user: AuthUser, token: string) => {
-    const state: AuthState = { user, token };
-    setAuth(state);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, []);
-
-  const updateUser = useCallback((user: AuthUser, token?: string) => {
-    setAuth((prev) => {
-      if (!prev) return prev;
-      const state: AuthState = { user, token: token ?? prev.token };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      return state;
+    let cancelled = false;
+    fetchMe().then((result) => {
+      if (cancelled) return;
+      setAuth(result.ok ? { user: result.data.user } : null);
+      setReady(true);
     });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const signOut = useCallback(() => {
+  const signIn = useCallback((user: AuthUser) => {
+    setAuth({ user });
+  }, []);
+
+  const signOut = useCallback(async () => {
+    await logout();
     setAuth(null);
-    localStorage.removeItem(STORAGE_KEY);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ auth, ready, signIn, signOut, updateUser }}>
+    <AuthContext.Provider value={{ auth, ready, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );

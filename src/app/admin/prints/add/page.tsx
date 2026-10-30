@@ -94,7 +94,7 @@ export default function AddPrintPage() {
       ...(Object.keys(price).length > 0 && { price }),
     };
 
-    const result = await createPrint(payload, auth.token);
+    const result = await createPrint(payload);
 
     if (!result.ok) {
       setLoading(false);
@@ -102,12 +102,13 @@ export default function AddPrintPage() {
       return;
     }
 
+    const productCode = result.data.product.productCode ?? "";
+
     if (files.length > 0) {
       setLoadingText("Uploading images…");
       const uploadResult = await uploadVariantImages(
-        result.data.productCode,
+        productCode,
         files,
-        auth.token,
       );
       if (!uploadResult.ok) {
         toast(`Image upload failed: ${uploadResult.error}`, "error");
@@ -116,7 +117,7 @@ export default function AddPrintPage() {
 
     setLoading(false);
     toast("Print created successfully", "success");
-    router.push(`/product/${result.data.productCode}`);
+    router.push(`/product/${productCode}`);
   }
 
   return (

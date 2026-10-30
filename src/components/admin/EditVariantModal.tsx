@@ -110,7 +110,7 @@ export default function EditVariantModal({
     }
 
     setSaving(true);
-    const result = await updateVariant(productCode, payload, auth.token);
+    const result = await updateVariant(productCode, payload);
     setSaving(false);
 
     if (result.ok) {

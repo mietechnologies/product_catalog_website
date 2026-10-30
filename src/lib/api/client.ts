@@ -5,8 +5,10 @@
  * responses into frontend types. Otherwise falls back to the mock server.
  *
  * The backend now supports:
- *  - Server-side filters on GET /api/products (productType, category, collection, size, hasVariants, minPrice, maxPrice)
- *  - Full-text search on GET /api/products/search?q=
+ *  - Server-side filters on GET /api/catalog/products (productType, category, collection, size, hasVariants, minPrice, maxPrice)
+ *  - Relevance-ranked search on GET /api/catalog/products/search?q=
+ *
+ * Signed-in state comes from the shared session cookie, so no call takes a token.
  */
 
 import type {
@@ -19,6 +21,7 @@ import type {
   CatalogFilters,
   CatalogResponse,
   CreateMiniaturePayload,
+  CreateProductResponse,
   CreatePrintPayload,
   CreatureType,
   Product,
@@ -28,6 +31,7 @@ import type {
   UpdateVariantPayload,
 } from "@/lib/types";
 import { endpoints, BASE_URL } from "./endpoints";
+import { readError } from "./errors";
 import { convertHeicFiles } from "../imageConversion";
 import * as mock from "./mockServer";
 
@@ -44,15 +48,9 @@ async function fetchJson<T>(
       ...(init?.headers as Record<string, string>),
     };
 
-    const res = await fetch(url, { ...init, headers });
-    if (!res.ok) {
-      const body = await res.json().catch(() => null);
-      return {
-        ok: false,
-        error: body?.message ?? res.statusText,
-        status: res.status,
-      };
-    }
+    // The shared MieTech session cookie decides pricing tiers and admin access
+    const res = await fetch(url, { ...init, headers, credentials: "include" });
+    if (!res.ok) return readError(res);
     const data: T = await res.json();
     return { ok: true, data };
   } catch (err) {
@@ -382,8 +380,7 @@ function applyAllFiltersMock(
 
 /** Fetch catalog entries with optional filters */
 export async function fetchCatalog(
-  filters: CatalogFilters,
-  token?: string,
+  filters: CatalogFilters
 ): Promise<ApiResult<CatalogResponse>> {
   if (!USE_LIVE_API) {
     try {
@@ -395,7 +392,6 @@ export async function fetchCatalog(
   }
 
   const hasSearchQuery = Boolean(filters.query?.trim());
-  const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 
   let result: ApiResult<BackendCatalogResponse>;
 
@@ -404,14 +400,12 @@ export async function fetchCatalog(
     const params = buildSearchParams(filters.query!, filters);
     result = await fetchJson<BackendCatalogResponse>(
       `${endpoints.search()}?${params}`,
-      { headers: authHeaders },
     );
   } else {
     // Use the list endpoint with server-side filters
     const params = buildListParams(filters);
     result = await fetchJson<BackendCatalogResponse>(
       `${endpoints.products()}?${params}`,
-      { headers: authHeaders },
     );
   }
 
@@ -429,8 +423,7 @@ export async function fetchCatalog(
 
 /** Fetch a base item with its variants by slug (slugified base name) */
 export async function fetchItem(
-  slug: string,
-  token?: string,
+  slug: string
 ): Promise<ApiResult<BaseItem>> {
   if (!USE_LIVE_API) {
     try {
@@ -442,12 +435,10 @@ export async function fetchItem(
     }
   }
 
-  const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 
   // Fetch all miniatures (only miniatures have variants) and find the group matching this slug
   const result = await fetchJson<BackendCatalogResponse>(
     `${endpoints.products()}?productType=miniature&limit=1000`,
-    { headers: authHeaders },
   );
   if (!result.ok) return result;
 
@@ -486,8 +477,7 @@ export async function fetchItem(
 
 /** Fetch a single product by slug (product code, e.g. "M-DR-0001") */
 export async function fetchProduct(
-  slug: string,
-  token?: string,
+  slug: string
 ): Promise<ApiResult<Product>> {
   if (!USE_LIVE_API) {
     try {
@@ -500,11 +490,9 @@ export async function fetchProduct(
     }
   }
 
-  const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 
   const result = await fetchJson<BackendProductItem>(
     endpoints.product(slug),
-    { headers: authHeaders },
   );
   if (!result.ok) return result;
 
@@ -520,7 +508,6 @@ export async function fetchProduct(
   // by fetching the full list and checking
   const listResult = await fetchJson<BackendCatalogResponse>(
     `${endpoints.products()}?productType=miniature&limit=1000`,
-    { headers: authHeaders },
   );
   let parentItemSlug: string | undefined;
   if (listResult.ok) {
@@ -539,29 +526,25 @@ export async function fetchProduct(
 
 /** Create a new miniature with variants (admin only) */
 export async function createMiniature(
-  payload: CreateMiniaturePayload,
-  token: string,
-): Promise<ApiResult<unknown>> {
-  return fetchJson(endpoints.miniatures(), {
+  payload: CreateMiniaturePayload
+): Promise<ApiResult<CreateProductResponse>> {
+  return fetchJson(endpoints.createProduct(), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ productType: "miniature", ...payload }),
   });
 }
 
 /** Create a new print, e.g. a figurine, toy, or decor piece (admin only) */
 export async function createPrint(
-  payload: CreatePrintPayload,
-  token: string,
-): Promise<ApiResult<{ productCode: string }>> {
-  return fetchJson(endpoints.products(), {
+  payload: CreatePrintPayload
+): Promise<ApiResult<CreateProductResponse>> {
+  return fetchJson(endpoints.createProduct(), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(payload),
   });
@@ -586,8 +569,7 @@ export async function fetchProductMeta(): Promise<ApiResult<ProductMeta>> {
 /** Upload images for a variant (admin only, multipart) */
 export async function uploadVariantImages(
   productCode: string,
-  files: File[],
-  token: string,
+  files: File[]
 ): Promise<ApiResult<unknown>> {
   try {
     const converted = await convertHeicFiles(files);
@@ -596,20 +578,13 @@ export async function uploadVariantImages(
       form.append("images", file);
     }
 
-    const headers: Record<string, string> = {
-      Authorization: `Bearer ${token}`,
-    };
-
     const res = await fetch(endpoints.variantImages(productCode), {
       method: "POST",
-      headers,
+      credentials: "include",
       body: form,
     });
 
-    if (!res.ok) {
-      const body = await res.json().catch(() => null);
-      return { ok: false, error: body?.message ?? res.statusText, status: res.status };
-    }
+    if (!res.ok) return readError(res);
     const data = await res.json();
     return { ok: true, data };
   } catch (err) {
@@ -620,14 +595,12 @@ export async function uploadVariantImages(
 /** Add a new variant to an existing miniature (admin only) */
 export async function addVariant(
   productCode: string,
-  payload: AddVariantPayload,
-  token: string,
+  payload: AddVariantPayload
 ): Promise<ApiResult<unknown>> {
   return fetchJson(endpoints.addVariant(productCode), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(payload),
   });
@@ -636,14 +609,12 @@ export async function addVariant(
 /** Update variant fields (admin only) */
 export async function updateVariant(
   productCode: string,
-  updates: UpdateVariantPayload,
-  token: string,
+  updates: UpdateVariantPayload
 ): Promise<ApiResult<unknown>> {
-  return fetchJson(endpoints.product(productCode), {
+  return fetchJson(endpoints.updateProduct(productCode), {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(updates),
   });

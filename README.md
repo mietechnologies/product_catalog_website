@@ -14,7 +14,7 @@ npm install
 
 # Configure environment (see "Connecting to the Backend" below)
 cp .env.example .env.local
-# Edit .env.local with your API URL and key
+# Edit .env.local with your backend URL
 
 # Run the development server
 npm run dev
@@ -157,7 +157,7 @@ Feature flags let parts of the app be shipped dark and switched on per environme
 - A flag is **on only when its variable is exactly `true`**. Unset, empty, `false`, `1`, etc. all mean off.
 - Values are **inlined at build time**, not read at runtime. Restart `npm run dev` or rebuild (`npm run build`, `docker build`) after changing one.
 - Setting the variable on a running server or container (`next start`, `docker run -e …`) **does nothing** — the value was fixed when the app was built. To change a flag, rebuild with the new value.
-- Flags are a **product/UX switch, not access control.** The backend API is unaffected by them and still enforces its own authentication and authorization; a flag only decides what this frontend builds and shows. Retailer accounts can still sign in with the retail flag off.
+- Flags are a **product/UX switch, not access control.** The backend API is unaffected by them and still enforces its own authentication and authorization; a flag only decides what this frontend builds and shows.
 
 ### Enabling the retail module
 
@@ -186,6 +186,8 @@ Everything else is unaffected, including catalog browsing, login, profile, and a
 
 ### How it is organized
 
+> **Not ported yet:** retailer accounts and orders still target the old `product_catalog_api` routes, which the shared MieTech backend does not have. Port them to the backend before turning the retail flag on.
+
 - **`src/modules/retail/`** — all retail code: screens, retailer/order API calls and endpoints, types, order-status helpers, and the menu/login components. Core code imports it only through `src/modules/retail/index.ts`.
 - **`src/app/(retail)/`** — thin route files that re-export the screens. This is a route group, so URLs are unchanged. The route files are named **`page.retail.tsx`**, and `next.config.ts` only registers the `retail.tsx` page extension when the flag is on. With the flag off these routes do not exist, so the screens and their API calls are not compiled into the build at all and the paths return 404. `layout.tsx` is a second line of defense that 404s if a retail route ever ends up built with the flag off.
 - The menu and login components exported by the module check the flag themselves and render nothing when it is off, so core files contain no flag logic.
@@ -202,31 +204,43 @@ Everything else is unaffected, including catalog browsing, login, profile, and a
 
 ## Connecting to the Backend
 
-The frontend connects to the **product_catalog_api** backend (Express + MongoDB). Set two environment variables in `.env.local`:
+The catalog runs on the shared MieTech backend (**mietechnologies_website_backend**, FastAPI + PostgreSQL), the same one that powers mietechnologies.com. Point the frontend at it in `.env.local`:
 
 ```bash
-# URL of the running backend (default port 3000)
-NEXT_PUBLIC_API_URL=http://localhost:3000
+# URL of the running backend (default port 8000)
+NEXT_PUBLIC_API_URL=http://localhost:8000
 
-# API key (create one via POST /api/keys on the backend)
-NEXT_PUBLIC_API_KEY=your-api-key-here
+# Main MieTech site, linked from the login and profile pages
+NEXT_PUBLIC_MAIN_SITE_URL=http://localhost:3000
 ```
 
 When `NEXT_PUBLIC_API_URL` is **not set** (or empty), the app automatically falls back to the built-in mock server with sample data — no backend required.
+
+The backend's `CORS_ALLOW_ORIGINS` must include this site's origin (for example `http://localhost:8000` locally, `https://catalog.mietechnologies.com` in production), because the browser sends the session cookie cross-origin.
+
+### Sign-in
+
+There are no catalog-specific accounts or API keys. Admins sign in with their MieTech account, either on `/login` here or on the main site's admin. The backend keeps the session in an httpOnly cookie, and every request is sent with `credentials: "include"`, so signing in on one site signs you in on both. To create the first admin, set `BOOTSTRAP_ADMIN_EMAIL` and `BOOTSTRAP_ADMIN_PASSWORD` on the backend. Accounts and passwords are managed on the main site.
+
+Signed-in admins see cost and wholesale prices and the admin tools. Everyone else sees MSRP only.
 
 ### Backend endpoints used
 
 | Frontend function  | Backend endpoint                          | Purpose                            |
 | ------------------ | ----------------------------------------- | ---------------------------------- |
-| `fetchCatalog()`   | `GET /api/products?limit=1000` (or `/api/products/search`) | Fetch every product type, group miniature variants, filter client-side |
-| `fetchItem(slug)`  | `GET /api/products?productType=miniature&limit=1000` | Fetch miniatures, find group by base name |
-| `fetchProduct(id)` | `GET /api/products/:productCode`          | Fetch a miniature variant or print by code |
-| `fetchProductMeta()` | `GET /api/products/meta`                | Collections in use, for the catalog filter |
-| `createPrint()`    | `POST /api/products`                      | Create a print (figurine, toy, decor, ...) |
+| `fetchCatalog()`   | `GET /api/catalog/products?limit=1000` (or `/search`) | Fetch every product type, group miniature variants, filter client-side |
+| `fetchItem(slug)`  | `GET /api/catalog/products?productType=miniature&limit=1000` | Fetch miniatures, find group by base name |
+| `fetchProduct(id)` | `GET /api/catalog/products/:productCode`  | Fetch a miniature variant or print by code |
+| `fetchProductMeta()` | `GET /api/catalog/products/meta`        | Collections in use, for the catalog filter |
+| `createMiniature()` / `createPrint()` | `POST /api/admin/catalog/products` | Create a miniature with variants, or a print |
+| `updateVariant()`  | `PATCH /api/admin/catalog/products/:productCode` | Edit a variant or print |
+| `addVariant()`     | `POST /api/admin/catalog/products/:productCode/variants` | Add a variant to a miniature |
+| `uploadVariantImages()` | `POST /api/admin/catalog/products/:productCode/images` | Upload photos |
+| `loginAdmin()` / `fetchMe()` / `logout()` | `/api/auth/login`, `/api/auth/me`, `/api/auth/logout` | Shared MieTech sign-in |
+
+The full contract lives in the backend repo's `API_CONTRACT.md`.
 
 The catalog has tabs for **All**, **Miniatures**, and **Prints**. Miniatures keep size, creature type, and variants; prints are single products with a print category (Toy, Decor, Figurine, ...). Any product can belong to collections such as "Halloween".
-
-All requests include the `x-api-key` header automatically.
 
 ### How the adapter works
 
@@ -243,20 +257,6 @@ The backend returns a flat list of variants (name format `"BaseName, VariantName
 - Groups with **2+ variants** → displayed as a base item → `/item/:slug` (slug derived from base name)
 
 Search, filter, and sort are applied **client-side** on the transformed data (the backend doesn't support query filtering yet).
-
-### Obtaining an API key
-
-```bash
-# First call creates a master key
-curl -X POST http://localhost:3000/api/keys
-
-# Subsequent calls create user keys
-curl -X POST http://localhost:3000/api/keys \
-  -H "Content-Type: application/json" \
-  -d '{"owner": "catalog-frontend"}'
-```
-
-Copy the returned key into `NEXT_PUBLIC_API_KEY` in `.env.local`.
 
 ## Mock fallback
 

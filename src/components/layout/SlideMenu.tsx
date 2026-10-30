@@ -79,7 +79,7 @@ export default function SlideMenu({ open, onClose }: SlideMenuProps) {
 
           <RetailCustomerMenuLinks onClose={onClose} linkClass={linkClass} />
 
-          {auth && auth.user.accountType === "admin" && (
+          {auth && auth.user.role === "admin" && (
             <>
               <Link
                 href="/admin/miniatures/add"

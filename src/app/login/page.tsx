@@ -2,7 +2,6 @@
 
 import { FormEvent, KeyboardEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
@@ -10,6 +9,7 @@ import { useToast } from "@/components/ui/Toast";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { loginAdmin } from "@/lib/auth/api";
 import { RetailerSignupPrompt } from "@/modules/retail";
+import { MAIN_SITE_URL } from "@/lib/site";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -34,8 +34,7 @@ export default function LoginPage() {
       return;
     }
 
-    const { token, data } = result.data;
-    signIn(data.user, token);
+    signIn(result.data.user);
     toast("Signed in successfully", "success");
     router.push("/");
   }
@@ -107,13 +106,14 @@ export default function LoginPage() {
         <div className="mt-6 text-center text-sm text-neutral space-y-2">
           <RetailerSignupPrompt />
           <p>
-            Admin?{" "}
-            <Link
-              href="/admin/create"
+            Uses your MieTech account. Signing in here also signs you in on{" "}
+            <a
+              href={MAIN_SITE_URL}
               className="font-medium text-primary hover:text-primary-light transition-colors"
             >
-              Create Admin
-            </Link>
+              the main site
+            </a>
+            .
           </p>
         </div>
       </Card>

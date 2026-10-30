@@ -20,7 +20,7 @@ export default function AdminOrderDetailScreen() {
 
   // Redirect non-admin users
   useEffect(() => {
-    if (ready && (!auth || auth.user.accountType !== "admin")) {
+    if (ready && (!auth || auth.user.role !== "admin")) {
       router.replace("/login");
     }
   }, [ready, auth, router]);
@@ -31,7 +31,7 @@ export default function AdminOrderDetailScreen() {
 
     async function load() {
       setLoading(true);
-      const result = await fetchOrderById(id, auth!.token);
+      const result = await fetchOrderById(id);
       if (result.ok) {
         setOrder(result.data.order);
       } else {
@@ -43,7 +43,7 @@ export default function AdminOrderDetailScreen() {
     load();
   }, [auth, id, toast]);
 
-  if (!ready || !auth || auth.user.accountType !== "admin") {
+  if (!ready || !auth || auth.user.role !== "admin") {
     return null;
   }
 

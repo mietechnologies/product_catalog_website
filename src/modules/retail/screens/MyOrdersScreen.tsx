@@ -53,7 +53,7 @@ export default function MyOrdersScreen() {
 
   // Redirect non-retailer users
   useEffect(() => {
-    if (ready && (!auth || auth.user.accountType !== "retailer")) {
+    if (ready && (!auth || auth.user.role !== "retailer")) {
       router.replace("/login");
     }
   }, [ready, auth, router]);
@@ -64,7 +64,7 @@ export default function MyOrdersScreen() {
 
     async function load() {
       setLoading(true);
-      const result = await fetchMyOrders(auth!.token);
+      const result = await fetchMyOrders();
       if (result.ok) {
         setOrders(result.data.orders);
       } else {
@@ -114,7 +114,7 @@ export default function MyOrdersScreen() {
     return withDerived;
   }, [orders, sortKey, sortDir]);
 
-  if (!ready || !auth || auth.user.accountType !== "retailer") {
+  if (!ready || !auth || auth.user.role !== "retailer") {
     return null;
   }
 

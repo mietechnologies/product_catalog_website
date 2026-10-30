@@ -18,7 +18,7 @@ export default function ApprovedRetailersScreen() {
 
   // Redirect non-admin users
   useEffect(() => {
-    if (ready && (!auth || auth.user.accountType !== "admin")) {
+    if (ready && (!auth || auth.user.role !== "admin")) {
       router.replace("/login");
     }
   }, [ready, auth, router]);
@@ -29,7 +29,7 @@ export default function ApprovedRetailersScreen() {
 
     async function load() {
       setLoading(true);
-      const result = await fetchApprovedRetailers(auth!.token);
+      const result = await fetchApprovedRetailers();
       if (result.ok) {
         setRetailers(result.data.retailers);
       } else {
@@ -41,7 +41,7 @@ export default function ApprovedRetailersScreen() {
     load();
   }, [auth, toast]);
 
-  if (!ready || !auth || auth.user.accountType !== "admin") {
+  if (!ready || !auth || auth.user.role !== "admin") {
     return null;
   }
 

@@ -26,7 +26,7 @@ export default function CreateOrderScreen() {
 
   // Redirect if not logged in or if admin
   useEffect(() => {
-    if (ready && (!auth || auth.user.accountType === "admin")) {
+    if (ready && (!auth || auth.user.role === "admin")) {
       router.replace(auth ? "/" : "/login");
     }
   }, [ready, auth, router]);
@@ -61,7 +61,6 @@ export default function CreateOrderScreen() {
 
     setSubmitting(true);
     const result = await createOrder(
-      auth.token,
       items.map((item) => ({
         productCode: item.productCode.trim(),
         quantity: item.quantity,
@@ -78,7 +77,7 @@ export default function CreateOrderScreen() {
     router.push("/");
   }
 
-  if (!ready || !auth || auth.user.accountType === "admin") {
+  if (!ready || !auth || auth.user.role === "admin") {
     return null;
   }
 

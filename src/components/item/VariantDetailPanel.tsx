@@ -36,7 +36,7 @@ export default function VariantDetailPanel({ variant, onDataChange }: VariantDet
       />
 
       {/* Admin: Upload Photos */}
-      {auth?.user.accountType === "admin" && onDataChange && (
+      {auth?.user.role === "admin" && onDataChange && (
         <ImageUpload productCode={variant.productCode} onSuccess={onDataChange} />
       )}
 
@@ -94,7 +94,7 @@ export default function VariantDetailPanel({ variant, onDataChange }: VariantDet
       </Link>
 
       {/* Admin: Edit Details */}
-      {auth?.user.accountType === "admin" && onDataChange && (
+      {auth?.user.role === "admin" && onDataChange && (
         <>
           <Button variant="ghost" onClick={() => setEditOpen(true)}>
             <svg

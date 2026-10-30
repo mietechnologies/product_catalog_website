@@ -1,58 +1,57 @@
 /**
- * API endpoint definitions — matches the MIETech product_catalog_api backend.
+ * API endpoint definitions — the catalog routes on the shared MieTech backend
+ * (mietechnologies_website_backend).
  *
- * Set NEXT_PUBLIC_API_URL (e.g. "http://localhost:3000") to point at the backend.
+ * Set NEXT_PUBLIC_API_URL (e.g. "http://localhost:8000") to point at the backend.
  * When not set, the client falls back to the in-memory mock server.
  */
 
 export const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
+const CATALOG = `${BASE_URL}/api/catalog/products`;
+const ADMIN_CATALOG = `${BASE_URL}/api/admin/catalog/products`;
+
 export const endpoints = {
   /**
-   * GET /api/products?page=&limit=&productType=&category=&collection=&size=&hasVariants=&minPrice=&maxPrice=
+   * GET /api/catalog/products?page=&limit=&productType=&category=&collection=&size=&hasVariants=&minPrice=&maxPrice=
    * Paginated list of every product type with optional server-side filters.
    */
-  products: () => `${BASE_URL}/api/products`,
+  products: () => CATALOG,
 
   /**
-   * GET /api/products/search?q=&productType=&page=&limit=
-   * Full-text search with relevance scoring.
+   * GET /api/catalog/products/search?q=&productType=&page=&limit=
+   * Search with relevance ranking.
    */
-  search: () => `${BASE_URL}/api/products/search`,
+  search: () => `${CATALOG}/search`,
 
-  /** GET /api/products/meta — product types, categories, and collections in use */
-  productMeta: () => `${BASE_URL}/api/products/meta`,
+  /** GET /api/catalog/products/meta — product types, categories, and collections in use */
+  productMeta: () => `${CATALOG}/meta`,
 
-  /** GET|PATCH /api/products/:productCode — single sellable unit (miniature variant or print) */
+  /** GET /api/catalog/products/:productCode — single sellable unit (miniature variant or print) */
   product: (productCode: string) =>
-    `${BASE_URL}/api/products/${encodeURIComponent(productCode)}`,
+    `${CATALOG}/${encodeURIComponent(productCode)}`,
 
-  /** POST /api/miniatures — create a miniature with variants */
-  miniatures: () => `${BASE_URL}/api/miniatures`,
+  /** POST /api/admin/catalog/products — create a miniature or print (admin) */
+  createProduct: () => ADMIN_CATALOG,
 
-  /** POST /api/keys/validate — validate an API key */
-  validateApiKey: () => `${BASE_URL}/api/keys/validate`,
+  /** PATCH /api/admin/catalog/products/:productCode — update a sellable unit (admin) */
+  updateProduct: (productCode: string) =>
+    `${ADMIN_CATALOG}/${encodeURIComponent(productCode)}`,
 
-  /** POST /api/users/login — admin sign-in */
-  login: () => `${BASE_URL}/api/users/login`,
-
-  /** POST /api/users/admin — create admin account */
-  createAdmin: () => `${BASE_URL}/api/users/admin`,
-
-  /** GET /api/users/me — get current user profile */
-  me: () => `${BASE_URL}/api/users/me`,
-
-  /** PATCH /api/users/me — update current user profile */
-  updateMe: () => `${BASE_URL}/api/users/me`,
-
-  /** PATCH /api/users/me/password — change password */
-  updatePassword: () => `${BASE_URL}/api/users/me/password`,
-
-  /** POST /api/miniatures/:productCode/variants — add a new variant to a miniature */
+  /** POST /api/admin/catalog/products/:productCode/variants — add a variant to a miniature (admin) */
   addVariant: (productCode: string) =>
-    `${BASE_URL}/api/miniatures/${encodeURIComponent(productCode)}/variants`,
+    `${ADMIN_CATALOG}/${encodeURIComponent(productCode)}/variants`,
 
-  /** POST /api/products/:productCode/images — upload images for a miniature variant or print */
+  /** POST /api/admin/catalog/products/:productCode/images — upload images for a variant or print (admin) */
   variantImages: (productCode: string) =>
-    `${BASE_URL}/api/products/${encodeURIComponent(productCode)}/images`,
+    `${ADMIN_CATALOG}/${encodeURIComponent(productCode)}/images`,
+
+  /** POST /api/auth/login — shared MieTech sign-in (sets the session cookie) */
+  login: () => `${BASE_URL}/api/auth/login`,
+
+  /** POST /api/auth/logout — ends the shared session */
+  logout: () => `${BASE_URL}/api/auth/logout`,
+
+  /** GET /api/auth/me — the signed-in user */
+  me: () => `${BASE_URL}/api/auth/me`,
 } as const;

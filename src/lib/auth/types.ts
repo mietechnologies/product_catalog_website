@@ -1,25 +1,32 @@
-/** Auth types for the MIETech admin system */
+/**
+ * Auth types for the shared MieTech login.
+ *
+ * The catalog signs in against the main MieTech backend, which keeps the
+ * session in an httpOnly cookie. The frontend never sees a token.
+ */
 
 export interface AuthUser {
+  id: string;
   email: string;
-  firstName: string;
-  lastName: string;
-  merchantName?: string;
-  accountType: string;
-  accountStatus?: string;
-  approvedDate?: string;
-  createdAt: string;
+  name: string;
+  /** "admin", "customer", and later "retailer" */
+  role: string;
 }
 
-/** Shape returned by POST /api/users/login and POST /api/users/admin */
-export interface AuthResponse {
+/** Shape returned by POST /api/auth/login */
+export interface AuthLoginResponse {
   status: string;
-  token: string;
-  data: { user: AuthUser };
+  message: string;
+  user: AuthUser;
 }
 
-/** Persisted auth state (localStorage + context) */
+/** Shape returned by GET /api/auth/me */
+export interface AuthSessionResponse {
+  authenticated: boolean;
+  user: AuthUser;
+}
+
+/** Auth state held in context */
 export interface AuthState {
   user: AuthUser;
-  token: string;
 }
