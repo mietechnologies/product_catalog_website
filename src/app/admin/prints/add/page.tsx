@@ -9,6 +9,7 @@ import Button from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { createPrint, uploadVariantImages } from "@/lib/api/client";
+import { isHttpUrl } from "@/lib/utils";
 import { PRINT_CATEGORIES, type CreatePrintPayload } from "@/lib/types";
 
 const categoryOptions = PRINT_CATEGORIES.map((c) => ({ value: c, label: c }));
@@ -31,6 +32,8 @@ export default function AddPrintPage() {
   const [category, setCategory] = useState("");
   const [collections, setCollections] = useState("");
   const [fileName, setFileName] = useState("");
+  const [creator, setCreator] = useState("");
+  const [modelUrl, setModelUrl] = useState("");
   const [cost, setCost] = useState("");
   const [wholesale, setWholesale] = useState("");
   const [msrp, setMsrp] = useState("");
@@ -53,8 +56,13 @@ export default function AddPrintPage() {
     );
   }
 
+  const modelUrlInvalid = modelUrl.trim() !== "" && !isHttpUrl(modelUrl.trim());
+
   const canSubmit =
-    name.trim() !== "" && category !== "" && fileName.trim() !== "";
+    name.trim() !== "" &&
+    category !== "" &&
+    fileName.trim() !== "" &&
+    !modelUrlInvalid;
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -77,6 +85,12 @@ export default function AddPrintPage() {
       category,
       fileName: fileName.trim(),
       ...(collectionList.length > 0 && { collections: collectionList }),
+      ...((creator.trim() || modelUrl.trim()) && {
+        attribution: {
+          ...(creator.trim() && { creator: creator.trim() }),
+          ...(modelUrl.trim() && { modelUrl: modelUrl.trim() }),
+        },
+      }),
       ...(Object.keys(price).length > 0 && { price }),
     };
 
@@ -301,6 +315,57 @@ export default function AddPrintPage() {
                   </>
                 )}
               </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* ── Attribution ───────────────────────────────────── */}
+        <Card className="p-6">
+          <h2 className="text-lg font-semibold text-neutral-dark">
+            Attribution{" "}
+            <span className="text-sm font-normal text-neutral">(optional)</span>
+          </h2>
+          <p className="text-sm text-neutral mt-1 mb-4">
+            Credit the creator of a third-party 3D model. Leave blank for
+            in-house models.
+          </p>
+
+          <div className="space-y-4">
+            <div>
+              <label
+                htmlFor="attributionCreator"
+                className="block text-sm font-medium text-neutral-dark mb-1"
+              >
+                Creator
+              </label>
+              <Input
+                id="attributionCreator"
+                value={creator}
+                onChange={(e) => setCreator(e.target.value)}
+                placeholder="e.g. Jane Sculptor"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="attributionModelUrl"
+                className="block text-sm font-medium text-neutral-dark mb-1"
+              >
+                Model URL
+              </label>
+              <Input
+                id="attributionModelUrl"
+                type="url"
+                value={modelUrl}
+                onChange={(e) => setModelUrl(e.target.value)}
+                placeholder="https://…"
+                aria-invalid={modelUrlInvalid}
+              />
+              {modelUrlInvalid && (
+                <p className="mt-1 text-xs text-red-600">
+                  Model URL must start with http:// or https://
+                </p>
+              )}
             </div>
           </div>
         </Card>

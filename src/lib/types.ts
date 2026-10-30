@@ -1,12 +1,13 @@
 /** Core product types for the MIETech catalog */
 
+/** Kinds of product the catalog sells. Matches `productType` on the backend. */
+export type ProductType = "miniature" | "print";
+
 /** Credit for a third-party 3D model. Omitted/null for in-house models. */
 export interface Attribution {
   creator?: string;
   modelUrl?: string;
 }
-/** Kinds of product the catalog sells. Matches `productType` on the backend. */
-export type ProductType = "miniature" | "print";
 
 export interface ProductBase {
   slug: string;
@@ -193,9 +194,9 @@ export interface UpdateVariantPayload {
   name?: string;
   description?: string;
   size?: string;
+  collections?: string[];
   /** Applies to the parent miniature (all variants). null removes it. */
   attribution?: Attribution | null;
-  collections?: string[];
   price?: {
     cost?: number;
     wholesale?: number;
@@ -219,8 +220,8 @@ export interface CreateMiniaturePayload {
   baseName: string;
   description?: string;
   category: string;
-  attribution?: Attribution;
   collections?: string[];
+  attribution?: Attribution;
   variants: CreateMiniatureVariant[];
 }
 
@@ -231,6 +232,7 @@ export interface CreatePrintPayload {
   category: string;
   fileName: string;
   collections?: string[];
+  attribution?: Attribution;
   price?: {
     cost?: number;
     wholesale?: number;
