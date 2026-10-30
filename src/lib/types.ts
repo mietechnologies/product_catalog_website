@@ -261,7 +261,7 @@ export interface CatalogResponse {
 
 // ── Backend API response shapes ──────────────────────────────────────
 
-/** Shape of a single item returned by GET /api/products and GET /api/products/:productCode */
+/** Shape of a single item returned by GET /api/catalog/products and GET /api/catalog/products/:productCode */
 export interface BackendProductItem {
   productCode: string;
   productType: ProductType;
@@ -275,12 +275,28 @@ export interface BackendProductItem {
   thumbnail: string | null;
   images: Record<string, string>; // { "0": "url", "1": "url" }
   attribution?: Attribution | null;
-  cost: number;
-  wholesale: number;
+  /** null unless the viewer is a signed-in admin */
+  cost?: number | null;
+  /** null unless the viewer is a signed-in admin (or, later, a retailer) */
+  wholesale?: number | null;
   msrp: number;
 }
 
-/** Shape of GET /api/products response */
+/** Shape of POST /api/admin/catalog/products */
+export interface CreateProductResponse {
+  message: string;
+  product: {
+    id: string;
+    productType: ProductType;
+    name: string;
+    /** Set for prints, which are their own sellable unit */
+    productCode: string | null;
+    /** Miniature variants, in the order they were sent */
+    variants: { productCode: string }[];
+  };
+}
+
+/** Shape of GET /api/catalog/products response */
 export interface BackendCatalogResponse {
   page: number;
   totalPages: number;
@@ -288,7 +304,7 @@ export interface BackendCatalogResponse {
   items: BackendProductItem[];
 }
 
-/** Shape of GET /api/products/meta (frontend keeps only what it needs) */
+/** Shape of GET /api/catalog/products/meta (frontend keeps only what it needs) */
 export interface ProductMeta {
   collections: string[];
 }

@@ -1,12 +1,16 @@
 /**
  * Retail API functions — retailer registration/approval and orders.
  *
- * Follows the same fetch / ApiResult pattern used by the auth client.
+ * Follows the same fetch / ApiResult pattern used by the auth client, and
+ * relies on the shared MieTech session cookie for auth.
+ *
+ * NOTE: the retail routes have not been ported to the shared backend yet.
+ * Retail is off by default (NEXT_PUBLIC_FEATURE_RETAIL), so these calls are
+ * not reachable until that port happens.
  */
 
 import type { ApiResult } from "@/lib/types";
 import type { AuthUser } from "@/lib/auth/types";
-import { authedHeaders } from "@/lib/auth/api";
 import { retailEndpoints as endpoints } from "./endpoints";
 import type { Order, PendingRetailer } from "./types";
 
@@ -42,12 +46,10 @@ export async function createRetailer(fields: {
 
 // ── Retailer management (admin) ─────────────────────────────────────
 
-export async function fetchApprovedRetailers(
-  token: string,
-): Promise<ApiResult<{ retailers: PendingRetailer[] }>> {
+export async function fetchApprovedRetailers(): Promise<ApiResult<{ retailers: PendingRetailer[] }>> {
   try {
     const res = await fetch(endpoints.approvedRetailers(), {
-      headers: { Authorization: `Bearer ${token}` },
+      credentials: "include",
     });
 
     if (!res.ok) {
@@ -66,12 +68,10 @@ export async function fetchApprovedRetailers(
   }
 }
 
-export async function fetchPendingRetailers(
-  token: string,
-): Promise<ApiResult<{ retailers: PendingRetailer[] }>> {
+export async function fetchPendingRetailers(): Promise<ApiResult<{ retailers: PendingRetailer[] }>> {
   try {
     const res = await fetch(endpoints.pendingRetailers(), {
-      headers: { Authorization: `Bearer ${token}` },
+      credentials: "include",
     });
 
     if (!res.ok) {
@@ -92,12 +92,11 @@ export async function fetchPendingRetailers(
 
 async function patchRetailer(
   url: string,
-  token: string,
 ): Promise<ApiResult<unknown>> {
   try {
     const res = await fetch(url, {
       method: "PATCH",
-      headers: { Authorization: `Bearer ${token}` },
+      credentials: "include",
     });
 
     if (!res.ok) {
@@ -116,25 +115,25 @@ async function patchRetailer(
   }
 }
 
-export function approveRetailer(id: string, token: string) {
-  return patchRetailer(endpoints.approveRetailer(id), token);
+export function approveRetailer(id: string) {
+  return patchRetailer(endpoints.approveRetailer(id));
 }
 
-export function rejectRetailer(id: string, token: string) {
-  return patchRetailer(endpoints.rejectRetailer(id), token);
+export function rejectRetailer(id: string) {
+  return patchRetailer(endpoints.rejectRetailer(id));
 }
 
 
 // ── Orders ───────────────────────────────────────────────────────────
 
 export async function createOrder(
-  token: string,
   items: { productCode: string; quantity: number }[],
 ): Promise<ApiResult<{ order: Order }>> {
   try {
     const res = await fetch(endpoints.createOrder(), {
       method: "POST",
-      headers: { ...authedHeaders(token), "Content-Type": "application/json" },
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ items }),
     });
 
@@ -155,7 +154,6 @@ export async function createOrder(
 }
 
 export async function fetchUnfulfilledOrders(
-  token: string,
   page = 1,
   limit = 20,
 ): Promise<
@@ -164,7 +162,7 @@ export async function fetchUnfulfilledOrders(
   try {
     const url = `${endpoints.unfulfilledOrders()}?page=${page}&limit=${limit}`;
     const res = await fetch(url, {
-      headers: authedHeaders(token),
+      credentials: "include",
     });
 
     if (!res.ok) {
@@ -193,11 +191,10 @@ export async function fetchUnfulfilledOrders(
 
 export async function fetchOrderById(
   id: string,
-  token: string,
 ): Promise<ApiResult<{ order: Order }>> {
   try {
     const res = await fetch(endpoints.order(id), {
-      headers: authedHeaders(token),
+      credentials: "include",
     });
 
     if (!res.ok) {
@@ -217,7 +214,6 @@ export async function fetchOrderById(
 }
 
 export async function fetchMyOrders(
-  token: string,
   page = 1,
   limit = 100,
 ): Promise<
@@ -226,7 +222,7 @@ export async function fetchMyOrders(
   try {
     const url = `${endpoints.myOrders()}?page=${page}&limit=${limit}`;
     const res = await fetch(url, {
-      headers: authedHeaders(token),
+      credentials: "include",
     });
 
     if (!res.ok) {
@@ -255,11 +251,10 @@ export async function fetchMyOrders(
 
 export async function fetchMyOrderById(
   id: string,
-  token: string,
 ): Promise<ApiResult<{ order: Order }>> {
   try {
     const res = await fetch(endpoints.myOrder(id), {
-      headers: authedHeaders(token),
+      credentials: "include",
     });
 
     if (!res.ok) {

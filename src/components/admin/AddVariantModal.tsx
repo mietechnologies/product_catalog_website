@@ -88,7 +88,7 @@ export default function AddVariantModal({
     }
 
     setSaving(true);
-    const result = await addVariant(productCode, payload, auth.token);
+    const result = await addVariant(productCode, payload);
     setSaving(false);
 
     if (result.ok) {

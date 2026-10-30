@@ -18,7 +18,7 @@ export function RetailCustomerMenuLinks({
 }: RetailMenuLinksProps) {
   const { auth } = useAuth();
 
-  if (!features.retail || !auth || auth.user.accountType === "admin") {
+  if (!features.retail || !auth || auth.user.role === "admin") {
     return null;
   }
 
@@ -28,7 +28,7 @@ export function RetailCustomerMenuLinks({
         Create Order
       </Link>
 
-      {auth.user.accountType === "retailer" && (
+      {auth.user.role === "retailer" && (
         <Link href="/orders" onClick={onClose} className={linkClass}>
           My Orders
         </Link>
@@ -45,7 +45,7 @@ export function RetailAdminMenuLinks({
   const { auth } = useAuth();
   const [retailOpen, setRetailOpen] = useState(false);
 
-  if (!features.retail || auth?.user.accountType !== "admin") return null;
+  if (!features.retail || auth?.user.role !== "admin") return null;
 
   return (
     <>

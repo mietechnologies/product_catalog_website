@@ -134,7 +134,7 @@ export default function AddMiniaturePage() {
       }),
     };
 
-    const result = await createMiniature(payload, auth.token);
+    const result = await createMiniature(payload);
 
     if (!result.ok) {
       setLoading(false);
@@ -150,10 +150,8 @@ export default function AddMiniaturePage() {
     if (variantsWithFiles.length > 0) {
       setLoadingText("Uploading images…");
 
-      // Extract product codes from the created miniature response
-      const created = result.data as {
-        variants: { productCode: string }[];
-      };
+      // Product codes come back in the order the variants were sent
+      const created = result.data.product;
 
       await Promise.all(
         variantsWithFiles.map(async ({ index, files }) => {
@@ -163,7 +161,6 @@ export default function AddMiniaturePage() {
           const uploadResult = await uploadVariantImages(
             productCode,
             files,
-            auth.token,
           );
           if (!uploadResult.ok) {
             toast(

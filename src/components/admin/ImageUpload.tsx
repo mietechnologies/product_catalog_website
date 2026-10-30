@@ -27,7 +27,6 @@ export default function ImageUpload({ productCode, onSuccess }: ImageUploadProps
     const result = await uploadVariantImages(
       productCode,
       Array.from(files),
-      auth!.token,
     );
     setUploading(false);
 

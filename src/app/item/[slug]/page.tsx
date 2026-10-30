@@ -30,7 +30,7 @@ export default function ItemPage() {
     setIsLoading(true);
     setError(null);
 
-    fetchItem(params.slug, auth?.token).then((result) => {
+    fetchItem(params.slug).then((result) => {
       if (result.ok) {
         setItem(result.data);
         setActiveVariantSlug((prev) => {
@@ -47,7 +47,7 @@ export default function ItemPage() {
       }
       setIsLoading(false);
     });
-  }, [params.slug, auth?.token, toast]);
+  }, [params.slug, toast]);
 
   useEffect(() => {
     loadItem();
@@ -127,7 +127,7 @@ export default function ItemPage() {
           />
 
           {/* Admin: Add Variant */}
-          {auth?.user.accountType === "admin" && (
+          {auth?.user.role === "admin" && (
             <Button
               variant="ghost"
               className="w-full mt-3"
@@ -166,7 +166,7 @@ export default function ItemPage() {
         </div>
       </div>
       {/* Add variant modal */}
-      {auth?.user.accountType === "admin" && item.variants.length > 0 && (
+      {auth?.user.role === "admin" && item.variants.length > 0 && (
         <AddVariantModal
           open={addOpen}
           onClose={() => setAddOpen(false)}

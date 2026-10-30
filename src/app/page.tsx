@@ -97,7 +97,7 @@ function CatalogPageInner() {
       setIsLoading(true);
       setHasError(false);
 
-      fetchCatalog(currentFilters, auth?.token).then((result) => {
+      fetchCatalog(currentFilters).then((result) => {
         if (result.ok) {
           setEntries(result.data.entries);
         } else {
@@ -108,7 +108,7 @@ function CatalogPageInner() {
         setIsLoading(false);
       });
     },
-    [auth?.token, toast]
+    [auth?.user.id, toast]
   );
 
   // Fetch data whenever filters change
@@ -117,7 +117,7 @@ function CatalogPageInner() {
     setIsLoading(true);
     setHasError(false);
 
-    fetchCatalog(filters, auth?.token).then((result) => {
+    fetchCatalog(filters).then((result) => {
       if (cancelled) return;
       if (result.ok) {
         setEntries(result.data.entries);
@@ -132,7 +132,7 @@ function CatalogPageInner() {
     return () => {
       cancelled = true;
     };
-  }, [filters, auth?.token, toast]);
+  }, [filters, toast]);
 
   function updateFilters(partial: Partial<CatalogFilters>) {
     const next = { ...filters, ...partial };

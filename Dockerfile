@@ -17,6 +17,13 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ARG NEXT_PUBLIC_FEATURE_RETAIL=false
 ENV NEXT_PUBLIC_FEATURE_RETAIL=$NEXT_PUBLIC_FEATURE_RETAIL
 
+# The shared MieTech backend and main site. Also inlined at build time, e.g.
+# `--build-arg NEXT_PUBLIC_API_URL=https://api.mietechnologies.com`.
+ARG NEXT_PUBLIC_API_URL=
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_MAIN_SITE_URL=https://mietechnologies.com
+ENV NEXT_PUBLIC_MAIN_SITE_URL=$NEXT_PUBLIC_MAIN_SITE_URL
+
 RUN npm run build
 
 # ── Stage 3: Production image ────────────────────────────────────────

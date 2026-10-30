@@ -12,8 +12,8 @@ export default function Header() {
   const { auth, ready, signOut } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  function handleSignOut() {
-    signOut();
+  async function handleSignOut() {
+    await signOut();
     router.push("/");
   }
 
@@ -89,7 +89,7 @@ export default function Header() {
                       href="/profile"
                       className="px-3 py-2 text-sm font-medium text-primary hover:text-primary-light transition-colors"
                     >
-                      {auth.user.merchantName || auth.user.firstName}
+                      {auth.user.name}
                     </Link>
                   </li>
                   <li>

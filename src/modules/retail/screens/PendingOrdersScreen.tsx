@@ -19,7 +19,7 @@ export default function PendingOrdersScreen() {
 
   // Redirect non-admin users
   useEffect(() => {
-    if (ready && (!auth || auth.user.accountType !== "admin")) {
+    if (ready && (!auth || auth.user.role !== "admin")) {
       router.replace("/login");
     }
   }, [ready, auth, router]);
@@ -30,7 +30,7 @@ export default function PendingOrdersScreen() {
 
     async function load() {
       setLoading(true);
-      const result = await fetchUnfulfilledOrders(auth!.token);
+      const result = await fetchUnfulfilledOrders();
       if (result.ok) {
         setOrders(result.data.orders);
       } else {
@@ -42,7 +42,7 @@ export default function PendingOrdersScreen() {
     load();
   }, [auth, toast]);
 
-  if (!ready || !auth || auth.user.accountType !== "admin") {
+  if (!ready || !auth || auth.user.role !== "admin") {
     return null;
   }
 

@@ -24,7 +24,7 @@ export default function PendingRetailersScreen() {
 
   // Redirect non-admin users
   useEffect(() => {
-    if (ready && (!auth || auth.user.accountType !== "admin")) {
+    if (ready && (!auth || auth.user.role !== "admin")) {
       router.replace("/login");
     }
   }, [ready, auth, router]);
@@ -35,7 +35,7 @@ export default function PendingRetailersScreen() {
 
     async function load() {
       setLoading(true);
-      const result = await fetchPendingRetailers(auth!.token);
+      const result = await fetchPendingRetailers();
       if (result.ok) {
         setRetailers(result.data.retailers);
       } else {
@@ -50,7 +50,7 @@ export default function PendingRetailersScreen() {
   async function handleApprove(id: string) {
     if (!auth) return;
     setActioningId(id);
-    const result = await approveRetailer(id, auth.token);
+    const result = await approveRetailer(id);
     setActioningId(null);
 
     if (!result.ok) {
@@ -65,7 +65,7 @@ export default function PendingRetailersScreen() {
   async function handleReject(id: string) {
     if (!auth) return;
     setActioningId(id);
-    const result = await rejectRetailer(id, auth.token);
+    const result = await rejectRetailer(id);
     setActioningId(null);
 
     if (!result.ok) {
@@ -77,7 +77,7 @@ export default function PendingRetailersScreen() {
     toast("Retailer rejected", "success");
   }
 
-  if (!ready || !auth || auth.user.accountType !== "admin") {
+  if (!ready || !auth || auth.user.role !== "admin") {
     return null;
   }
 
