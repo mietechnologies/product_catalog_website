@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "target": "ES2017", "lib": ["dom", "dom.iterable", "esnext"], "strict": true, "skipLibCheck": true,
+    "jsx": "react-jsx", "module": "esnext", "moduleResolution": "bundler",
+    "declaration": true, "emitDeclarationOnly": true, "noEmit": false,
+    "rootDir": "../..", "outDir": "dist/types",
+    "baseUrl": "../..", "paths": { "@/*": ["./src/*"], "next/link": [".design-sync/pkg/shims/next-link.tsx"], "next/image": [".design-sync/pkg/shims/next-image.tsx"] },
+    "types": ["react", "react-dom"], "typeRoots": ["../../node_modules/@types"]
+  },
+  "files": ["entry.ts"]
+}
