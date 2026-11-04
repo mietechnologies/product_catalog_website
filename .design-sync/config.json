@@ -1,0 +1,58 @@
+{
+  "projectId": "875862e2-3e08-4e8e-b994-fceb66f3e15f",
+  "shape": "package",
+  "pkg": "mietech-catalog-ui",
+  "globalName": "Mietech",
+  "buildCmd": "node .design-sync/pkg/build.mjs",
+  "srcDir": "../../src",
+  "cssEntry": "dist/styles.css",
+  "runtimeFontPrefixes": [
+    "Inter"
+  ],
+  "dtsPropsFor": {
+    "Button": "variant?: \"primary\" | \"secondary\" | \"ghost\"; children?: React.ReactNode; className?: string; disabled?: boolean; type?: \"button\" | \"submit\" | \"reset\"; onClick?: React.MouseEventHandler<HTMLButtonElement>; [attr: string]: unknown",
+    "Input": "type?: string; placeholder?: string; value?: string; defaultValue?: string; disabled?: boolean; className?: string; onChange?: React.ChangeEventHandler<HTMLInputElement>; [attr: string]: unknown",
+    "Select": "options: { value: string; label: string }[]; placeholder?: string; value?: string; disabled?: boolean; className?: string; onChange?: React.ChangeEventHandler<HTMLSelectElement>; [attr: string]: unknown",
+    "CardSkeleton": "",
+    "FiltersBar": "filters: { query?: string; productType?: \"miniature\" | \"print\"; category?: string; collection?: string; size?: \"Tiny\" | \"Small\" | \"Medium\" | \"Large\" | \"Huge\" | \"Gargantuan\"; hasVariants?: boolean; priceMin?: number; priceMax?: number; sort?: \"name-asc\" | \"price-low\" | \"price-high\" }; onChange: (filters: Partial<{ query?: string; productType?: \"miniature\" | \"print\"; category?: string; collection?: string; size?: \"Tiny\" | \"Small\" | \"Medium\" | \"Large\" | \"Huge\" | \"Gargantuan\"; hasVariants?: boolean; priceMin?: number; priceMax?: number; sort?: \"name-asc\" | \"price-low\" | \"price-high\" }>) => void; collections?: string[]",
+    "ProductCard": "entry: { slug: string; name: string; productCode?: string; image: string; price?: number; priceRange?: { min: number; max: number }; productType: \"miniature\" | \"print\"; category: string; collections: string[]; size?: \"Tiny\" | \"Small\" | \"Medium\" | \"Large\" | \"Huge\" | \"Gargantuan\"; creatureType?: string; hasVariants: boolean; type: \"product\" | \"item\" }",
+    "ProductGrid": "entries: { slug: string; name: string; productCode?: string; image: string; price?: number; priceRange?: { min: number; max: number }; productType: \"miniature\" | \"print\"; category: string; collections: string[]; size?: \"Tiny\" | \"Small\" | \"Medium\" | \"Large\" | \"Huge\" | \"Gargantuan\"; creatureType?: string; hasVariants: boolean; type: \"product\" | \"item\" }[]; isLoading: boolean; hasError?: boolean; hasActiveFilters?: boolean; onClearFilters?: () => void; onRetry?: () => void",
+    "ProductTypeTabs": "value?: \"miniature\" | \"print\"; onChange: (productType: \"miniature\" | \"print\" | undefined) => void",
+    "AttributionCredit": "attribution?: { creator?: string; modelUrl?: string } | null; className?: string",
+    "Breadcrumbs": "items: { label: string; href?: string }[]"
+  },
+  "overrides": {
+    "FiltersBar": {
+      "cardMode": "column"
+    },
+    "ProductGrid": {
+      "cardMode": "column"
+    },
+    "ProductTypeTabs": {
+      "cardMode": "column"
+    },
+    "SearchBar": {
+      "cardMode": "column"
+    },
+    "CardSkeleton": {
+      "cardMode": "column"
+    },
+    "Input": {
+      "cardMode": "column"
+    },
+    "AttributionCredit": {
+      "cardMode": "column"
+    },
+    "Gallery": {
+      "cardMode": "column"
+    },
+    "PriceBlock": {
+      "cardMode": "column"
+    },
+    "ToastProvider": {
+      "cardMode": "single",
+      "primaryStory": "Stacked"
+    }
+  },
+  "readmeHeader": ".design-sync/conventions.md"
+}
