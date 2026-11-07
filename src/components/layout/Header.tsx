@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import SlideMenu from "./SlideMenu";
 
+const MAIN_SITE_URL = "https://mietechnologies.com";
+
 export default function Header() {
   const router = useRouter();
   const { auth, ready, signOut } = useAuth();
@@ -20,9 +22,9 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-neutral/15 bg-white/95 backdrop-blur-sm">
       <div className="mx-auto max-w-7xl flex items-center justify-between px-4 sm:px-6 h-16">
-          {/* Logo + wordmark */}
-          <Link
-            href="/"
+          {/* Logo + wordmark: goes to the main MieTech site */}
+          <a
+            href={MAIN_SITE_URL}
             className="flex items-center gap-3 group"
             aria-label="MIETech home"
           >
@@ -42,7 +44,7 @@ export default function Header() {
                 Making It Easier
               </span>
             </div>
-          </Link>
+          </a>
 
           {/* Nav */}
           <nav aria-label="Main navigation">
