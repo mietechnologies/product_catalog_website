@@ -8,10 +8,12 @@ import Button from "@/components/ui/Button";
 
 interface ImageUploadProps {
   productCode: string;
-  onSuccess: () => void;
+  /** Receives the product's full images map after the upload */
+  onSuccess: (images: Record<string, string>) => void;
+  label?: string;
 }
 
-export default function ImageUpload({ productCode, onSuccess }: ImageUploadProps) {
+export default function ImageUpload({ productCode, onSuccess, label = "Upload Photos" }: ImageUploadProps) {
   const { auth } = useAuth();
   const { toast } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -35,7 +37,7 @@ export default function ImageUpload({ productCode, onSuccess }: ImageUploadProps
 
     if (result.ok) {
       toast("Images uploaded successfully", "success");
-      onSuccess();
+      onSuccess(result.data.images);
     } else {
       toast(result.error);
     }
@@ -52,6 +54,7 @@ export default function ImageUpload({ productCode, onSuccess }: ImageUploadProps
         onChange={handleFiles}
       />
       <Button
+        type="button"
         variant="ghost"
         disabled={uploading}
         onClick={() => inputRef.current?.click()}
@@ -93,7 +96,7 @@ export default function ImageUpload({ productCode, onSuccess }: ImageUploadProps
                 d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z"
               />
             </svg>
-            Upload Photos
+            {label}
           </>
         )}
       </Button>

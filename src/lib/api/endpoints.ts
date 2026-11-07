@@ -46,6 +46,14 @@ export const endpoints = {
   variantImages: (productCode: string) =>
     `${ADMIN_CATALOG}/${encodeURIComponent(productCode)}/images`,
 
+  /** DELETE /api/admin/catalog/products/:productCode/images/:imageKey — remove one image (admin) */
+  variantImage: (productCode: string, imageKey: string) =>
+    `${ADMIN_CATALOG}/${encodeURIComponent(productCode)}/images/${encodeURIComponent(imageKey)}`,
+
+  /** PUT /api/admin/catalog/products/:productCode/images/order — reorder images; the first is the cover (admin) */
+  variantImageOrder: (productCode: string) =>
+    `${ADMIN_CATALOG}/${encodeURIComponent(productCode)}/images/order`,
+
   /** POST /api/auth/login — shared MieTech sign-in (sets the session cookie) */
   login: () => `${BASE_URL}/api/auth/login`,
 

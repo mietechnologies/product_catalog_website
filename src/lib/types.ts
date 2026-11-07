@@ -21,6 +21,8 @@ export interface ProductBase {
   price: number;
   description: string;
   images: string[]; // 1-5 images
+  /** Backend image keys, parallel to `images`; needed to delete or reorder photos */
+  imageKeys?: string[];
   thumbnail?: string | null;
   /** Miniatures only */
   size?: ProductSize;
@@ -294,6 +296,12 @@ export interface CreateProductResponse {
     /** Miniature variants, in the order they were sent */
     variants: { productCode: string }[];
   };
+}
+
+/** Shape of the admin image endpoints' responses (upload, delete, reorder) */
+export interface BackendImagesResponse {
+  message: string;
+  images: Record<string, string>; // { "0": "url", "1": "url" }; key "0" is the cover
 }
 
 /** Shape of GET /api/catalog/products response */

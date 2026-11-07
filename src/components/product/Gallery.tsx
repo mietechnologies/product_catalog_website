@@ -12,18 +12,22 @@ interface GalleryProps {
 }
 
 export default function Gallery({ images, name, category }: GalleryProps) {
-  const [activeIndex, setActiveIndex] = useState(0);
-  // Track which image indices have failed to load
-  const [failedIndices, setFailedIndices] = useState<Set<number>>(new Set());
+  const [selectedIndex, setActiveIndex] = useState(0);
+  // Track which image URLs have failed to load (by URL, so it survives reordering)
+  const [failedUrls, setFailedUrls] = useState<Set<string>>(new Set());
 
   const markFailed = useCallback((idx: number) => {
-    setFailedIndices((prev) => new Set(prev).add(idx));
-  }, []);
+    const url = images[idx];
+    if (url) setFailedUrls((prev) => new Set(prev).add(url));
+  }, [images]);
 
   const hasRealImages = images.length > 0 && images[0] !== "";
   const count = hasRealImages ? images.length : 1;
+  // Admins can delete photos while the gallery is showing, so keep the selection in range
+  const activeIndex = Math.min(selectedIndex, count - 1);
+  const isFailed = (idx: number) => failedUrls.has(images[idx]);
 
-  const activeImageOk = hasRealImages && !failedIndices.has(activeIndex);
+  const activeImageOk = hasRealImages && !isFailed(activeIndex);
 
   return (
     <div className="space-y-3">
@@ -58,7 +62,7 @@ export default function Gallery({ images, name, category }: GalleryProps) {
       {count > 1 && (
         <div className="flex gap-2" role="tablist" aria-label="Image gallery">
           {Array.from({ length: count }).map((_, idx) => {
-            const thumbOk = hasRealImages && !failedIndices.has(idx);
+            const thumbOk = hasRealImages && !isFailed(idx);
             return (
               <button
                 key={idx}
