@@ -15,6 +15,7 @@ import type {
   AddVariantPayload,
   ApiResult,
   BackendCatalogResponse,
+  BackendImagesResponse,
   BackendProductItem,
   BaseItem,
   CatalogEntry,
@@ -83,11 +84,25 @@ function parseBackendName(name: string): {
   };
 }
 
+/** Keys of a backend images map, in display order */
+function sortedImageKeys(images: Record<string, string>): string[] {
+  return Object.keys(images).sort((a, b) => Number(a) - Number(b));
+}
+
 /** Convert backend images map { "0": url, "1": url } to ordered array */
 function imagesMapToArray(images: Record<string, string>): string[] {
-  return Object.keys(images)
-    .sort((a, b) => Number(a) - Number(b))
-    .map((k) => images[k]);
+  return sortedImageKeys(images).map((k) => images[k]);
+}
+
+/** A product photo with the key the admin endpoints use to address it */
+export interface ProductPhoto {
+  key: string;
+  url: string;
+}
+
+/** Convert backend images map to ordered photos (first is the cover) */
+export function imagesMapToPhotos(images: Record<string, string>): ProductPhoto[] {
+  return sortedImageKeys(images).map((key) => ({ key, url: images[key] }));
 }
 
 /** Base name of a backend item: the parent miniature's name, or the print's name */
@@ -122,6 +137,7 @@ function backendToProduct(
     price: item.msrp,
     description: item.description ?? "",
     images: imageArray,
+    imageKeys: sortedImageKeys(item.images),
     thumbnail: item.thumbnail,
     ...typeFields(item),
     attributes: {
@@ -570,7 +586,7 @@ export async function fetchProductMeta(): Promise<ApiResult<ProductMeta>> {
 export async function uploadVariantImages(
   productCode: string,
   files: File[]
-): Promise<ApiResult<unknown>> {
+): Promise<ApiResult<BackendImagesResponse>> {
   try {
     const converted = await convertHeicFiles(files);
     const form = new FormData();
@@ -590,6 +606,33 @@ export async function uploadVariantImages(
   } catch (err) {
     return { ok: false, error: (err as Error).message, status: 0 };
   }
+}
+
+/** Delete one image from a variant or print (admin only) */
+export async function deleteVariantImage(
+  productCode: string,
+  imageKey: string
+): Promise<ApiResult<BackendImagesResponse>> {
+  return fetchJson(endpoints.variantImage(productCode, imageKey), {
+    method: "DELETE",
+  });
+}
+
+/**
+ * Reorder a variant's or print's images (admin only).
+ * `order` lists every current image key; the first becomes the cover.
+ */
+export async function reorderVariantImages(
+  productCode: string,
+  order: string[]
+): Promise<ApiResult<BackendImagesResponse>> {
+  return fetchJson(endpoints.variantImageOrder(productCode), {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ order }),
+  });
 }
 
 /** Add a new variant to an existing miniature (admin only) */

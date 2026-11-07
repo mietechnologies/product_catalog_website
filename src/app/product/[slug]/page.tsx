@@ -54,7 +54,9 @@ export default function ProductPage() {
     notFound();
   }
 
-  if (isLoading) {
+  // Only show the skeleton on first load, so admin edits that refresh the
+  // product don't unmount an open edit modal.
+  if (isLoading && !product) {
     return (
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8 space-y-6">
         <Skeleton className="h-4 w-48" />
@@ -236,6 +238,8 @@ export default function ProductPage() {
             wholesale: wholesaleNum,
             msrp: product.price,
             attribution: product.attribution,
+            images: product.images,
+            imageKeys: product.imageKeys,
           }}
           onSuccess={loadProduct}
         />

@@ -127,6 +127,8 @@ export default function VariantDetailPanel({ variant, onDataChange }: VariantDet
               wholesale: wholesaleNum,
               msrp: variant.price,
               attribution: variant.attribution,
+              images: variant.images,
+              imageKeys: variant.imageKeys,
             }}
             onSuccess={onDataChange}
           />

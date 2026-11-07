@@ -12,6 +12,7 @@ import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
+import PhotoManager from "./PhotoManager";
 
 interface EditVariantInitial {
   name: string;
@@ -22,6 +23,10 @@ interface EditVariantInitial {
   wholesale: number;
   msrp: number;
   attribution?: Attribution | null;
+  /** Current photo URLs, in display order (first is the cover) */
+  images: string[];
+  /** Backend image keys, parallel to `images` */
+  imageKeys?: string[];
 }
 
 interface EditVariantModalProps {
@@ -144,7 +149,7 @@ export default function EditVariantModal({
             open ? "scale-100 opacity-100" : "scale-95 opacity-0",
           )}
         >
-          <div className="p-6 space-y-5">
+          <div className="p-6 space-y-5 max-h-[calc(100vh-2rem)] overflow-y-auto">
             <h2 className="text-lg font-bold text-gray-900">
               {isVariant ? "Edit Variant" : "Edit Details"}
             </h2>
@@ -270,6 +275,14 @@ export default function EditVariantModal({
                 <p className="text-xs text-red-600">Model URL must start with http:// or https://</p>
               )}
             </div>
+
+            {/* Photos (saved immediately, independent of Save/Cancel) */}
+            <PhotoManager
+              productCode={productCode}
+              images={initial.images}
+              imageKeys={initial.imageKeys}
+              onChange={onSuccess}
+            />
 
             {/* Actions */}
             <div className="flex justify-end gap-3 pt-2">

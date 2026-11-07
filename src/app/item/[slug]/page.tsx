@@ -57,7 +57,9 @@ export default function ItemPage() {
     notFound();
   }
 
-  if (isLoading) {
+  // Only show the skeleton on first load, so admin edits that refresh the
+  // item don't unmount an open edit modal.
+  if (isLoading && !item) {
     return (
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8 space-y-6">
         <Skeleton className="h-4 w-48" />
